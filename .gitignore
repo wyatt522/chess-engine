@@ -1,3 +1,7 @@
 .venv
 data/pgn/*.pgn
 __pycache__/
+data/*.pgn
+torch_engine.spec
+venv_chess_learning_engine/*
+dist/torch_engine/*
