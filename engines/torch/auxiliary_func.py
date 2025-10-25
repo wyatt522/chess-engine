@@ -1,5 +1,8 @@
 import numpy as np
 from chess import Board
+from tqdm import tqdm # type: ignore
+import psutil
+from collections import deque
 
 
 def board_to_matrix(board: Board):
@@ -26,11 +29,31 @@ def board_to_matrix(board: Board):
 
     return matrix
 
+def check_memory():
+    mem = psutil.virtual_memory()
+    available_gb = mem.available / (1024 ** 3)
+    return available_gb
+
+
 
 def create_input_for_nn(games):
+
+    LOW_MEMORY_GB = 5.0
+
     X = []
     y = []
-    for game in games:
+
+    for i, game in enumerate(tqdm(games)):
+
+        # Check memory every 100 games
+        if i % 100 == 0:
+            available_gb = check_memory()
+            
+            if available_gb < LOW_MEMORY_GB:
+                print(f"Low memory hit at {i} games")
+                print(available_gb)
+                break
+
         board = game.board()
         for move in game.mainline_moves():
             X.append(board_to_matrix(board))
