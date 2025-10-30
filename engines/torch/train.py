@@ -103,6 +103,7 @@ writer = SummaryWriter(log_dir=log_dir)
 
 
 num_epochs = 60
+steps = 0
 for epoch in range(num_epochs):
     start_time = time.time()
 
@@ -126,6 +127,8 @@ for epoch in range(num_epochs):
         scheduler.step()
         running_loss += loss.item()
 
+        steps += 1
+
     # Validation
     model.eval()
     val_loss = 0.0
@@ -148,8 +151,10 @@ for epoch in range(num_epochs):
 
     if epoch % 25 == 0:
         # Save the model
-        torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")  
-    print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {running_loss / len(train_loader):.4f}, Time: {minutes}m{seconds}s', flush=True)
+        torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")
+    
+    current_lr = scheduler.get_last_lr()[0]
+    print(f'Steps: {steps}, Epoch: {epoch + 1}/{num_epochs}, Loss: {running_loss / len(train_loader):.4f}, Time: {minutes}m{seconds}s, Learning Rate: {current_lr}', flush=True)
 
     writer.add_scalar("Loss/train", avg_train_loss, epoch + 1)
     writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
