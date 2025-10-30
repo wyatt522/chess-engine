@@ -45,7 +45,7 @@ def load_pgn(file_path, pgn_memory_mark = 1.0):
                 break
             yield game
 
-def create_input_for_nn(game, move_collection_prob = 0.33):
+def create_input_for_nn(game, move_collection_prob = 0.1):
     X = []
     y = []
 
@@ -85,4 +85,4 @@ def load_dataset(files, pgn_memory_mark = 3.0, file_limit = 30):
         files_parsed += 1
         if files_parsed >= file_limit:
             print(f"Completed sampling limit of files with {available_gb} remaining", flush=True)
-            return X, y
+            return X, y, games_parsed, files_parsed

@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn # type: ignore
 import torch.optim as optim # type: ignore
 from torch.utils.data import random_split, DataLoader # type: ignore
+from torch.optim.lr_scheduler import MultiStepLR
 from chess import pgn # type: ignore
 from tqdm import tqdm # type: ignore
 from torch.utils.tensorboard import SummaryWriter
@@ -14,32 +15,31 @@ from auxiliary_func import check_memory
 
 
 
-run_name = "turing_cluster_run2"
+run_name = "turing_cluster_run3"
 
 
 # Calcute memory distribution so that loading pgns is 10% of processed data, 1.5 gb leftover
 
 total_mem = check_memory()
+print(total_mem, flush=True)
 # pgn_memory_mark = total_mem*30/31
 # print(total_mem)
 # print(pgn_memory_mark)
 
 allocated_memory = 96
 pgn_memory_mark = total_mem - allocated_memory/2
-
+print(pgn_memory_mark, flush=True)
 
 
 from auxiliary_func import load_dataset, encode_moves
+#TODO: use zip instead, standardize
 files = [file for file in os.listdir("../../data/Lichess_Elite_Database") if file.endswith(".pgn")]
 # Sort by file size (ascending)
 files_sorted = sorted(files, key=lambda f: os.path.getsize(os.path.join("../../data/Lichess_Elite_Database", f)))
 
 LIMIT_OF_FILES = min(len(files_sorted), 80)
-files_parsed = 0
-games_parsed = 0
-stop = False
 
-X, y = load_dataset(files_sorted, pgn_memory_mark=pgn_memory_mark, file_limit=LIMIT_OF_FILES)
+X, y, games_parsed, files_parsed = load_dataset(files_sorted, pgn_memory_mark=pgn_memory_mark, file_limit=LIMIT_OF_FILES)
 
 
 X, y = np.array(X, dtype=np.float32), np.array(y)
@@ -67,7 +67,7 @@ from model import ChessModel
 
 # Create Dataset
 dataset = ChessDataset(X, y)
-dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=1024, shuffle=True)
 
 # Compute split sizes
 train_size = int(0.9 * len(dataset))
@@ -76,8 +76,8 @@ val_size = len(dataset) - train_size
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
 # Then create DataLoaders
-train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=1024, shuffle=False)
 
 # Check for GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -86,8 +86,9 @@ print(f'Using device: {device}', flush=True)
 # Model Initialization
 model = ChessModel(num_classes=num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
+optimizer = optim.Adam(model.parameters(), lr=0.1)
 
+scheduler = MultiStepLR(optimizer, milestones=[60000, 150000, 300000], gamma=0.1)
 
 
 # Get current time in a readable format
@@ -101,7 +102,7 @@ writer = SummaryWriter(log_dir=log_dir)
 
 
 
-num_epochs = 500
+num_epochs = 60
 for epoch in range(num_epochs):
     start_time = time.time()
 
@@ -122,6 +123,7 @@ for epoch in range(num_epochs):
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         
         optimizer.step()
+        scheduler.step()
         running_loss += loss.item()
 
     # Validation
@@ -144,7 +146,7 @@ for epoch in range(num_epochs):
     minutes: int = int(epoch_time // 60)
     seconds: int = int(epoch_time) - minutes * 60
 
-    if epoch % 40 == 0:
+    if epoch % 25 == 0:
         # Save the model
         torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")  
     print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {running_loss / len(train_loader):.4f}, Time: {minutes}m{seconds}s', flush=True)
