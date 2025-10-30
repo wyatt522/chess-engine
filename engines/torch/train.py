@@ -29,7 +29,7 @@ print(pgn_memory_mark)
 
 
 from auxiliary_func import load_dataset, encode_moves
-files = [file for file in os.listdir("../../data") if file.endswith(".pgn")]
+files = [file for file in os.listdir("../../data/Lichess_Elite_Database") if file.endswith(".pgn")]
 # Sort by file size (ascending)
 files_sorted = sorted(files, key=lambda f: os.path.getsize(os.path.join("../../data", f)))
 
