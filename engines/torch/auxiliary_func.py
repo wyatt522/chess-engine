@@ -83,6 +83,7 @@ def load_dataset(files, pgn_memory_mark = 3.0, file_limit = 30):
                     return X, y
 
         files_parsed += 1
+        print(f"Completed sampling {files_parsed} files with {available_gb} remaining")
         if files_parsed >= file_limit:
             print(f"Completed sampling limit of files with {available_gb} remaining")
             return X, y
