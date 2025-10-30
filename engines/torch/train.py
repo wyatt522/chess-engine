@@ -26,7 +26,7 @@ print(total_mem, flush=True)
 # print(total_mem)
 # print(pgn_memory_mark)
 
-allocated_memory = 96
+allocated_memory = 128
 pgn_memory_mark = total_mem - allocated_memory/2
 print(pgn_memory_mark, flush=True)
 
@@ -46,6 +46,11 @@ X, y = np.array(X, dtype=np.float32), np.array(y)
 
 y, move_to_int = encode_moves(y)
 num_classes = len(move_to_int)
+
+import pickle
+
+with open(f"../../models/{run_name}_move_to_int", "wb") as file:
+    pickle.dump(move_to_int, file)
 
 
 
@@ -165,10 +170,3 @@ writer.close()
 
 # Save the model
 torch.save(model.state_dict(), f"../../models/{run_name}_final_model.pth", flush=True)
-
-
-
-import pickle
-
-with open(f"../../models/{run_name}_move_to_int", "wb") as file:
-    pickle.dump(move_to_int, file)
