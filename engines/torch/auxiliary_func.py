@@ -70,7 +70,7 @@ def load_dataset(files, pgn_memory_mark = 3.0, file_limit = 30):
 
     for file in tqdm(files):
 
-        for game in load_pgn(f"../../data/Lichess_Elite_Database{file}"):
+        for game in load_pgn(f"../../data/Lichess_Elite_Database/{file}"):
             games_parsed += 1
             x_temp, y_temp = create_input_for_nn(game)
             X.extend(x_temp)
