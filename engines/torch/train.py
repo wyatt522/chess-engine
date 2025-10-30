@@ -14,7 +14,7 @@ from auxiliary_func import check_memory
 
 
 
-run_name = "turing_cluster_run1"
+run_name = "turing_cluster_run2"
 
 
 # Calcute memory distribution so that loading pgns is 10% of processed data, 1.5 gb leftover
@@ -24,7 +24,7 @@ total_mem = check_memory()
 # print(total_mem)
 # print(pgn_memory_mark)
 
-allocated_memory = 8
+allocated_memory = 96
 pgn_memory_mark = total_mem - allocated_memory/2
 
 
@@ -53,12 +53,12 @@ X = torch.tensor(X, dtype=torch.float32)
 y = torch.tensor(y, dtype=torch.long)
 
 
-
-print(f"GAMES PARSED: {games_parsed}")
-print(f"FILES PARSED: {files_parsed}")
-print(f"MOVES RECORDED: {len(y)}")
+print("Completed Data Processing", flush=True)
+print(f"GAMES PARSED: {games_parsed}", flush=True)
+print(f"FILES PARSED: {files_parsed}", flush=True)
+print(f"MOVES RECORDED: {len(y)}", flush=True)
 available_gb = check_memory()
-print(f"Available Memory: {available_gb}")
+print(f"Available Memory: {available_gb}", flush=True)
 
 
 from dataset import ChessDataset
@@ -81,7 +81,7 @@ val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 
 # Check for GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f'Using device: {device}')
+print(f'Using device: {device}', flush=True)
 
 # Model Initialization
 model = ChessModel(num_classes=num_classes).to(device)
@@ -147,7 +147,7 @@ for epoch in range(num_epochs):
     if epoch % 40 == 0:
         # Save the model
         torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")  
-    print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {running_loss / len(train_loader):.4f}, Time: {minutes}m{seconds}s')
+    print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {running_loss / len(train_loader):.4f}, Time: {minutes}m{seconds}s', flush=True)
 
     writer.add_scalar("Loss/train", avg_train_loss, epoch + 1)
     writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
@@ -157,7 +157,7 @@ writer.close()
 
 
 # Save the model
-torch.save(model.state_dict(), f"../../models/{run_name}_final_model.pth")
+torch.save(model.state_dict(), f"../../models/{run_name}_final_model.pth", flush=True)
 
 
 
