@@ -7,3 +7,4 @@ venv_chess_learning_engine/*
 dist/torch_engine/*
 train.ipynb
 runs/*
+models/checkpoints/*

@@ -2,7 +2,6 @@ import numpy as np
 from chess import Board, pgn
 from tqdm import tqdm # type: ignore
 import psutil
-from collections import deque
 import random
 
 
@@ -46,7 +45,7 @@ def load_pgn(file_path, pgn_memory_mark = 1.0):
                 break
             yield game
 
-def create_input_for_nn(game, move_collection_prob = 0.1):
+def create_input_for_nn(game, move_collection_prob = 0.33):
     X = []
     y = []
 
