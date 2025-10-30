@@ -20,7 +20,7 @@ run_name = "turing_cluster_run1"
 # Calcute memory distribution so that loading pgns is 10% of processed data, 1.5 gb leftover
 
 total_mem = check_memory()
-pgn_memory_mark = total_mem*3/7
+pgn_memory_mark = total_mem*30/31
 print(total_mem)
 print(pgn_memory_mark)
 
