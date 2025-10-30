@@ -1,5 +1,7 @@
 .venv
 data/pgn/*.pgn
+data/*.7z
+data/Lichess_Elite_Database/*
 __pycache__/
 data/*.pgn
 torch_engine.spec
@@ -7,3 +9,4 @@ venv_chess_learning_engine/*
 dist/torch_engine/*
 train.ipynb
 runs/*
+models/checkpoints/*

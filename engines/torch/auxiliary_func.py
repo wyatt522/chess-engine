@@ -1,8 +1,9 @@
 import numpy as np
-from chess import Board
+from chess import Board, pgn
 from tqdm import tqdm # type: ignore
 import psutil
-from collections import deque
+import random
+import os
 
 
 def board_to_matrix(board: Board):
@@ -34,34 +35,58 @@ def check_memory():
     available_gb = mem.available / (1024 ** 3)
     return available_gb
 
+def load_pgn(file_path):
+    with open(file_path, 'r') as pgn_file:
+        while True:
+            game = pgn.read_game(pgn_file)
+            if game is None:
+                break
+            yield game
 
-
-def create_input_for_nn(games):
-
-    LOW_MEMORY_GB = 5.0
-
+def create_input_for_nn(game, move_collection_prob = 0.1):
     X = []
     y = []
 
-    for i, game in enumerate(tqdm(games)):
+    board = game.board()
+    for move in game.mainline_moves():
 
-        # Check memory every 100 games
-        if i % 100 == 0:
-            available_gb = check_memory()
-            
-            if available_gb < LOW_MEMORY_GB:
-                print(f"Low memory hit at {i} games")
-                print(available_gb)
-                break
-
-        board = game.board()
-        for move in game.mainline_moves():
+        if random.random() < move_collection_prob:
             X.append(board_to_matrix(board))
             y.append(move.uci())
-            board.push(move)
-    return np.array(X, dtype=np.float32), np.array(y)
+
+        board.push(move)
+    return X, y
 
 
 def encode_moves(moves):
     move_to_int = {move: idx for idx, move in enumerate(set(moves))}
     return np.array([move_to_int[move] for move in moves], dtype=np.float32), move_to_int
+
+def load_dataset(data_folder, pgn_memory_mark = 3.0):
+    files = [file for file in os.listdir(data_folder) if file.endswith(".pgn")]
+    # Sort by file size (ascending)
+    files_sorted = sorted(files, key=lambda f: os.path.getsize(os.path.join(data_folder, f)))
+
+    LIMIT_OF_FILES = min(len(files_sorted), 80)
+
+    X, y = [], []
+    games_parsed = files_parsed = 0
+
+    for file in tqdm(files_sorted):
+
+        for game in load_pgn(f"{data_folder}/{file}"):
+            games_parsed += 1
+            x_temp, y_temp = create_input_for_nn(game)
+            X.extend(x_temp)
+            y.extend(y_temp)
+
+            if games_parsed % 100 == 0:
+                available_gb = check_memory()
+                if available_gb < pgn_memory_mark:
+                    print(f"Completed sampling {files_parsed} files with {available_gb} remaining", flush=True)
+                    return X, y, games_parsed, files_parsed
+
+        files_parsed += 1
+        if files_parsed >= LIMIT_OF_FILES:
+            print(f"Completed sampling limit of files with {available_gb} remaining", flush=True)
+            return X, y, games_parsed, files_parsed
