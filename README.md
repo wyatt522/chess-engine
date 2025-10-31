@@ -21,3 +21,11 @@ It failes after about 20 moves. Simple algorithm to detect blunders is needed.
 - Refer to ```engines/chess_engine.ipynb``` for further instructions and actions (TensorFlow)
 
 - Or see ```engines/torch/predict```
+
+
+
+## Installing UCI:
+
+- Quick Folder install:
+
+    ```pyinstaller --onedir --distpath ./dist --name torch_random_data --add-data "models/200EPOCHS_random_data.pth:models" --add-data "models/random_data_move_to_int:models" engines/torch/uci.py```

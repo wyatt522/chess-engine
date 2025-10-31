@@ -10,3 +10,5 @@ dist/torch_engine/*
 train.ipynb
 runs/*
 models/checkpoints/*
+dist/*
+build/*

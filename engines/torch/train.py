@@ -12,16 +12,18 @@ from datetime import datetime
 from auxiliary_func import check_memory, load_dataset, encode_moves
 from dataset import ChessDataset
 from model import ChessModel
+from model2 import ChessModel2
 import pickle
 
 
 
 
-run_name = "lr_decay_experiment"
+run_name = "more_layers_experiment"
+dataset_name = "lr_decay_experiment"
 data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 1 # in GB Ram
-num_epochs = 60
-dataset = "generate"
+allocated_memory = 128 # in GB Ram
+num_epochs = 70
+dataset = "reuse"
 
 
 # Calcute memory distribution so that loading pgns is 10% of processed data, 1.5 gb leftover
@@ -59,9 +61,9 @@ if dataset == "generate":
     print(f"Available Memory: {available_gb}", flush=True)
 
 elif dataset == "reuse":
-    X, y = torch.load(f"{data_folder}/{run_name}_dataset.pth")
+    X, y = torch.load(f"{data_folder}/{dataset_name}_dataset.pth")
 
-    with open(f"../../models/{run_name}_move_to_int", "rb") as file:
+    with open(f"../../models/{dataset_name}_move_to_int", "rb") as file:
         move_to_int = pickle.load(file)
 
     num_classes = len(move_to_int)
@@ -90,11 +92,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}', flush=True)
 
 # Model Initialization
-model = ChessModel(num_classes=num_classes).to(device)
+model = ChessModel2(num_classes=num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.1)
+optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
-scheduler = MultiStepLR(optimizer, milestones=[60000, 150000, 300000], gamma=0.1)
+scheduler = MultiStepLR(optimizer, milestones=[50000, 250000, 400000], gamma=0.2)
 
 
 # Get current time in a readable format

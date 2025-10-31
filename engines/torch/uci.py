@@ -32,8 +32,9 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = os.path.join(os.path.dirname(__file__), "../../")  # normal script location
 
-MODEL_PATH = os.path.join(BASE_DIR, "models/TORCH_100EPOCHS_smaller_data.pth")
-MAPPING_PATH = os.path.join(BASE_DIR, "models/heavy_move_to_int")
+MODEL_NAME = "lr_decay_experiment"
+MODEL_PATH = os.path.join(BASE_DIR, f"models/{MODEL_NAME}2_final_model.pth")
+MAPPING_PATH = os.path.join(BASE_DIR, f"models/{MODEL_NAME}_move_to_int")
 
 # Load mapping
 with open(MAPPING_PATH, "rb") as file:
