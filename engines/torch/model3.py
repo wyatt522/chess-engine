@@ -32,9 +32,9 @@ class ChessModel3(nn.Module):
         x = self.bn1(self.relu(self.conv1(x)))
         x = self.bn2(self.relu(self.conv2(x)))
         x = self.bn3(self.relu(self.conv3(x)))
-        x = self.bn4(self.relu(self.conv5(x)))
-        x = self.bn5(self.relu(self.conv6(x)))
-        x = self.bn6(self.relu(self.conv4(x)))
+        x = self.bn4(self.relu(self.conv4(x)))
+        x = self.bn5(self.relu(self.conv5(x)))
+        x = self.bn6(self.relu(self.conv6(x)))
         x = self.flatten(x)
         x = self.relu(self.fc1(x))
         x = self.fc2(x)  # Output raw logits
