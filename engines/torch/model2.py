@@ -10,7 +10,7 @@ class ChessModel2(nn.Module):
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         self.conv4 = nn.Conv2d(64, 80, kernel_size=3, padding=1)
         self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(8 * 8 * 128, 256)
+        self.fc1 = nn.Linear(8 * 8 * 80, 256)
         self.fc2 = nn.Linear(256, num_classes)
         self.relu = nn.ReLU()
 

@@ -13,20 +13,21 @@ from auxiliary_func import check_memory, load_dataset, encode_moves
 from dataset import ChessDataset
 from model import ChessModel
 from model2 import ChessModel2
+from model3 import ChessModel3
 import pickle
 
 
 
 
-run_name = "more_layers_experiment"
+run_name = "6CNN_layers"
 dataset_name = "lr_decay_experiment"
 data_folder = "../../data/Lichess_Elite_Database"
 allocated_memory = 128 # in GB Ram
-num_epochs = 70
+num_epochs = 80
 dataset = "reuse"
 
 
-# Calcute memory distribution so that loading pgns is 10% of processed data, 1.5 gb leftover
+# Calcute memory distribution so that 1/2 is dedicated to dataset pre tensor conversion, 1/2 saved for after
 
 if dataset == "generate":
 
@@ -92,7 +93,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}', flush=True)
 
 # Model Initialization
-model = ChessModel2(num_classes=num_classes).to(device)
+model = ChessModel3(num_classes=num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
@@ -103,7 +104,7 @@ scheduler = MultiStepLR(optimizer, milestones=[50000, 250000, 400000], gamma=0.2
 current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 # Create a unique log directory
-log_dir = f"../../runs/{run_name}_experiment_i{len(y)}_{current_time}"
+log_dir = f"../../runs/{run_name}_i{len(y)}_{current_time}"
 
 # Create the SummaryWriter
 writer = SummaryWriter(log_dir=log_dir)

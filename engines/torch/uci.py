@@ -2,6 +2,7 @@ import sys
 from auxiliary_func import board_to_matrix
 import torch
 from model import ChessModel
+from model2 import ChessModel2
 import pickle
 import numpy as np
 import chess
@@ -30,11 +31,10 @@ def prepare_input(board: Board):
 if getattr(sys, 'frozen', False):
     BASE_DIR = sys._MEIPASS       # temp folder where PyInstaller unpacks files
 else:
-    BASE_DIR = os.path.join(os.path.dirname(__file__), "../../")  # normal script location
+    BASE_DIR = os.path.join(os.path.dirname(__file__), "../../../")  # normal script location
 
-MODEL_NAME = "lr_decay_experiment"
-MODEL_PATH = os.path.join(BASE_DIR, f"models/{MODEL_NAME}2_final_model.pth")
-MAPPING_PATH = os.path.join(BASE_DIR, f"models/{MODEL_NAME}_move_to_int")
+MODEL_PATH = os.path.join(BASE_DIR, f"models/more_layers_experiment_final_model.pth")
+MAPPING_PATH = os.path.join(BASE_DIR, f"models/lr_decay_experiment_move_to_int")
 
 # Load mapping
 with open(MAPPING_PATH, "rb") as file:
@@ -45,7 +45,7 @@ int_to_move = {v: k for k, v in move_to_int.items()}
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
-model = ChessModel(num_classes=len(move_to_int))
+model = ChessModel2(num_classes=len(move_to_int))
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.to(device)
 model.eval()
