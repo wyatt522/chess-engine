@@ -19,7 +19,7 @@ import pickle
 
 
 
-run_name = "6CNN_layers"
+run_name = "BN_4CNN_layers"
 dataset_name = "lr_decay_experiment"
 data_folder = "../../data/Lichess_Elite_Database"
 allocated_memory = 128 # in GB Ram
