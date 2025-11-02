@@ -25,9 +25,9 @@ import pickle
 run_name = "Convolution_final_layer"
 dataset_name = "lr_decay_experiment"
 data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 48 # in GB Ram
+allocated_memory = 2 # in GB Ram
 num_epochs = 60
-dataset = "reuse"
+dataset = "generate"
 
 
 # Calcute memory distribution so that 1/2 is dedicated to dataset pre tensor conversion, 1/2 saved for after

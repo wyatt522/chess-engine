@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-# no FCNN, just weird cnn reshape
+# no FCNN, just weird cnn 
 class ChessModel5(nn.Module):
     def __init__(self, num_classes):
         super(ChessModel5, self).__init__()
@@ -31,9 +31,9 @@ class ChessModel5(nn.Module):
         nn.init.kaiming_uniform_(self.conv7.weight, nonlinearity='relu')
 
     def forward(self, x):
-        x = self.bn1(self.relu(self.conv3(x)))
-        x = self.bn2(self.relu(self.conv1(x)))
-        x = self.bn3(self.relu(self.conv2(x)))
+        x = self.bn1(self.relu(self.conv1(x)))
+        x = self.bn2(self.relu(self.conv2(x)))
+        x = self.bn3(self.relu(self.conv3(x)))
         x = self.bn4(self.relu(self.conv4(x)))
         x = self.bn5(self.relu(self.conv5(x)))
         x = self.bn6(self.relu(self.conv6(x)))
