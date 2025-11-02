@@ -21,10 +21,10 @@ import pickle
 
 
 
-run_name = "BN_4CNN_layers_squeeze"
+run_name = "6CNN_Layers_Light_squeeze"
 dataset_name = "lr_decay_experiment"
 data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 128 # in GB Ram
+allocated_memory = 48 # in GB Ram
 num_epochs = 60
 dataset = "reuse"
 
@@ -95,7 +95,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}', flush=True)
 
 # Model Initialization
-model = ChessModel4(num_classes=num_classes).to(device)
+model = ChessModel3(num_classes=num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
