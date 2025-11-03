@@ -12,3 +12,5 @@ runs/*
 models/checkpoints/*
 dist/*
 build/*
+*.err
+*.out
