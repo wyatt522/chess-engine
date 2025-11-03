@@ -22,11 +22,11 @@ import pickle
 
 
 run_name = "6CNN_Layers_tight_squeeze"
-dataset_name = "lr_decay_experiment"
+dataset_name = "dataset1"
 data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 48 # in GB Ram
-num_epochs = 60
-dataset = "reuse"
+allocated_memory = 256 # in GB Ram
+num_epochs = 80
+dataset = "generate"
 
 
 # Calcute memory distribution so that 1/2 is dedicated to dataset pre tensor conversion, 1/2 saved for after
@@ -160,7 +160,7 @@ for epoch in range(num_epochs):
     minutes: int = int(epoch_time // 60)
     seconds: int = int(epoch_time) - minutes * 60
 
-    if epoch % 25 == 0:
+    if epoch % 20 == 0:
         # Save the model
         torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")
     
