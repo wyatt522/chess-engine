@@ -62,12 +62,12 @@ def encode_moves(moves):
     move_to_int = {move: idx for idx, move in enumerate(set(moves))}
     return np.array([move_to_int[move] for move in moves], dtype=np.float32), move_to_int
 
-def load_dataset(data_folder, pgn_memory_mark = 3.0):
+def load_dataset(data_folder, pgn_memory_mark = 3.0, file_limit = 80):
     files = [file for file in os.listdir(data_folder) if file.endswith(".pgn")]
     # Sort by file size (ascending)
     files_sorted = sorted(files, key=lambda f: os.path.getsize(os.path.join(data_folder, f)))
 
-    LIMIT_OF_FILES = min(len(files_sorted), 80)
+    LIMIT_OF_FILES = min(len(files_sorted), file_limit)
 
     X, y = [], []
     games_parsed = files_parsed = 0
@@ -88,5 +88,6 @@ def load_dataset(data_folder, pgn_memory_mark = 3.0):
 
         files_parsed += 1
         if files_parsed >= LIMIT_OF_FILES:
+            available_gb = check_memory()
             print(f"Completed sampling limit of files with {available_gb} remaining", flush=True)
             return X, y, games_parsed, files_parsed

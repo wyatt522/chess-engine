@@ -19,6 +19,8 @@ class ChessModel(nn.Module):
         nn.init.xavier_uniform_(self.fc2.weight)
 
     def forward(self, x):
+        print(x)
+        print(x.shape)
         x = self.relu(self.conv1(x))
         x = self.relu(self.conv2(x))
         x = self.flatten(x)
