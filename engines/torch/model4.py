@@ -5,7 +5,7 @@ class ChessModel4(nn.Module):
     def __init__(self, num_classes):
         super(ChessModel4, self).__init__()
         # conv1 -> relu -> conv2 -> relu -> conv3 -> relu -> conv4 -> relu -> flatten -> fc1 -> relu -> fc2
-        self.conv1 = nn.Conv2d(13, 64, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(16, 64, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
         self.conv4 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
