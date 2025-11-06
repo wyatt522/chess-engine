@@ -16,16 +16,17 @@ from model2 import ChessModel2
 from model3 import ChessModel3
 from model4 import ChessModel4
 from model5 import ChessModel5
+from model7 import ChessModel7
 import pickle
 
 
 
 
-run_name = "weight_decay_test"
+run_name = "squeeze_and_excite_test"
 dataset_name = "flipped_board_data"
 data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 230 # in GB Ram
-num_epochs = 70
+allocated_memory = 100 # in GB Ram
+num_epochs = 80
 dataset = "reuse"
 
 
@@ -95,7 +96,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}', flush=True)
 
 # Model Initialization
-model = ChessModel4(num_classes=num_classes).to(device)
+model = ChessModel7(num_classes=num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005, weight_decay=0.01)
 
