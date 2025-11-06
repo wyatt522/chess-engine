@@ -62,14 +62,16 @@ def load_pgn(file_path):
                 break
             yield game
 
-def create_input_for_nn(game, move_collection_prob = 0.1):
+def create_input_for_nn(game, move_collection_prob = 0.15):
     X = []
     y = []
 
     board = game.board()
+    move_num = 0
     for move in game.mainline_moves():
-
-        if random.random() < move_collection_prob:
+        move_num += 1
+        mult = 2 if move_num > 40 else 1
+        if random.random() < move_collection_prob*mult:
             X.append(board_to_matrix(board))
             y.append(move.uci())
 
