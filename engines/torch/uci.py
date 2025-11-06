@@ -2,11 +2,12 @@ import sys
 from auxiliary_func import board_to_matrix
 import torch
 from model import ChessModel
-from model2 import ChessModel2
+from model4 import ChessModel4
 import pickle
 import numpy as np
 import chess
 from chess import Board
+import random
 
 import os
 import time
@@ -33,8 +34,8 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = os.path.join(os.path.dirname(__file__), "../../../")  # normal script location
 
-MODEL_PATH = os.path.join(BASE_DIR, f"models/more_layers_experiment_final_model.pth")
-MAPPING_PATH = os.path.join(BASE_DIR, f"models/lr_decay_experiment_move_to_int")
+MODEL_PATH = os.path.join(BASE_DIR, f"models/flipped_boards_model_final_model.pth")
+MAPPING_PATH = os.path.join(BASE_DIR, f"models/flipped_board_data_move_to_int")
 
 # Load mapping
 with open(MAPPING_PATH, "rb") as file:
@@ -45,25 +46,43 @@ int_to_move = {v: k for k, v in move_to_int.items()}
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
-model = ChessModel2(num_classes=len(move_to_int))
+model = ChessModel4(num_classes=len(move_to_int))
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.to(device)
 model.eval()
 
-def predict_move(board: Board):
+def predict_move(board: Board, pseudo_temp: int = 4):
     X_tensor = prepare_input(board).to(device)
+    
     with torch.no_grad():
         logits = model(X_tensor)
-    logits = logits.squeeze(0)
-    probabilities = torch.softmax(logits, dim=0).cpu().numpy()
+    
+    logits = logits.squeeze(0)  # Remove batch dimension
+    
+    probabilities = torch.softmax(logits, dim=0).cpu().numpy()  # Convert to probabilities
+    argsort = np.argsort(probabilities)[::-1] # record what moves sorted probs correspond to
+
+
+    sorted_probs = probabilities
+    sorted_probs.sort()
+    sorted_probs = sorted_probs[::-1]
     legal_moves = list(board.legal_moves)
     legal_moves_uci = [move.uci() for move in legal_moves]
-    sorted_indices = np.argsort(probabilities)[::-1]
-    for move_index in sorted_indices:
-        move = int_to_move[move_index]
-        print(move)
-        if move in legal_moves_uci:
-            return move
+    # sorted_indices = np.argsort(probabilities)[::-1]
+    for i in range(10): # try finding a legal move 10 times first
+        selection = random.random() ** pseudo_temp
+        collective_sum = 0
+        idx = 0
+        for prob in sorted_probs:
+            # print(prob)
+            collective_sum += prob
+            if selection < collective_sum:
+                move = int_to_move[argsort[idx]]
+                if move in legal_moves_uci:
+                    return move
+                else:
+                    break
+            idx += 1
     return None
 
 # -----------------------------
