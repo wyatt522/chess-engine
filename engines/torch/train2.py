@@ -21,21 +21,21 @@ import pickle
 
 
 
-run_name = "6CNN_Layers_tight_squeeze"
-dataset_name = "dataset1"
+run_name = "flipped_boards_model"
+dataset_name = "flipped_board_data"
 data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 256 # in GB Ram
+allocated_memory = 230 # in GB Ram
 num_epochs = 80
 dataset = "generate"
 
 
-# Calcute memory distribution so that 1/2 is dedicated to dataset pre tensor conversion, 1/2 saved for after
+# Calcute memory distribution so that 2/3 is dedicated to dataset pre tensor conversion, 1/2 saved for after
 
 if dataset == "generate":
 
     total_mem = check_memory()
     print(total_mem, flush=True)
-    pgn_memory_mark = total_mem - allocated_memory/2
+    pgn_memory_mark = total_mem - (2*allocated_memory)/3
     print(pgn_memory_mark, flush=True)
 
 
@@ -48,13 +48,13 @@ if dataset == "generate":
     num_classes = len(move_to_int)
 
 
-    with open(f"../../models/{run_name}_move_to_int", "wb") as file:
+    with open(f"../../models/{dataset_name}_move_to_int", "wb") as file:
         pickle.dump(move_to_int, file)
 
     X = torch.tensor(X, dtype=torch.float32)
     y = torch.tensor(y, dtype=torch.long)
 
-    torch.save((X, y), f"{data_folder}/{run_name}_dataset.pth")
+    torch.save((X, y), f"{data_folder}/{dataset_name}_dataset.pth")
 
     print("Completed Data Processing", flush=True)
     print(f"GAMES PARSED: {games_parsed}", flush=True)

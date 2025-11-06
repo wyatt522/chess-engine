@@ -18,7 +18,7 @@ def board_to_matrix(board: Board):
     for square, piece in piece_map.items():
         row, col = divmod(square, 8)
         piece_type = piece.piece_type - 1
-        piece_color = 0 if piece.color else 6
+        piece_color = 6 if board.turn != piece.color else 0
         matrix[piece_type + piece_color, row, col] = 1
 
     # Populate the legal moves board (13th 8x8 board)
