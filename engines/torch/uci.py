@@ -3,6 +3,7 @@ from auxiliary_func import board_to_matrix
 import torch
 from model import ChessModel
 from model4 import ChessModel4
+from model7 import ChessModel7
 import pickle
 import numpy as np
 import chess
@@ -34,7 +35,7 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = os.path.join(os.path.dirname(__file__), "../../../")  # normal script location
 
-MODEL_PATH = os.path.join(BASE_DIR, f"models/flipped_boards_model_final_model.pth")
+MODEL_PATH = os.path.join(BASE_DIR, f"models/squeeze_and_excite_test2_final_model.pth")
 MAPPING_PATH = os.path.join(BASE_DIR, f"models/flipped_board_data_move_to_int")
 
 # Load mapping
@@ -46,7 +47,7 @@ int_to_move = {v: k for k, v in move_to_int.items()}
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
-model = ChessModel4(num_classes=len(move_to_int))
+model = ChessModel7(num_classes=len(move_to_int))
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.to(device)
 model.eval()

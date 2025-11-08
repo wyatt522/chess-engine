@@ -11,32 +11,27 @@ from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from auxiliary_func import check_memory, load_dataset, encode_moves
 from dataset import ChessDataset
-from model import ChessModel
-from model2 import ChessModel2
-from model3 import ChessModel3
-from model4 import ChessModel4
-from model5 import ChessModel5
-from model6 import ChessModel6
+from MiniMaia import MiniMaia
 import pickle
 
 
 
 
-run_name = "Convolution_final_layer"
-dataset_name = "lr_decay_experiment"
+run_name = "maia_blocks_test"
+dataset_name = "flipped_board_data"
 data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 2 # in GB Ram
-num_epochs = 60
-dataset = "generate"
+allocated_memory = 60 # in GB Ram
+num_epochs = 70
+dataset = "reuse"
 
 
-# Calcute memory distribution so that 1/2 is dedicated to dataset pre tensor conversion, 1/2 saved for after
+# Calcute memory distribution so that 2/3 is dedicated to dataset pre tensor conversion, 1/2 saved for after
 
 if dataset == "generate":
 
     total_mem = check_memory()
     print(total_mem, flush=True)
-    pgn_memory_mark = total_mem - allocated_memory/2
+    pgn_memory_mark = total_mem - (2*allocated_memory)/3
     print(pgn_memory_mark, flush=True)
 
 
@@ -49,13 +44,13 @@ if dataset == "generate":
     num_classes = len(move_to_int)
 
 
-    with open(f"../../models/{run_name}_move_to_int", "wb") as file:
+    with open(f"../../models/{dataset_name}_move_to_int", "wb") as file:
         pickle.dump(move_to_int, file)
 
     X = torch.tensor(X, dtype=torch.float32)
     y = torch.tensor(y, dtype=torch.long)
 
-    torch.save((X, y), f"{data_folder}/{run_name}_dataset.pth")
+    torch.save((X, y), f"{data_folder}/{dataset_name}_dataset.pth")
 
     print("Completed Data Processing", flush=True)
     print(f"GAMES PARSED: {games_parsed}", flush=True)
@@ -96,7 +91,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}', flush=True)
 
 # Model Initialization
-model = ChessModel5(num_classes=num_classes).to(device)
+model = MiniMaia(num_classes=num_classes, num_blocks=4).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
@@ -161,7 +156,7 @@ for epoch in range(num_epochs):
     minutes: int = int(epoch_time // 60)
     seconds: int = int(epoch_time) - minutes * 60
 
-    if epoch % 25 == 0:
+    if epoch % 20 == 0:
         # Save the model
         torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")
     
