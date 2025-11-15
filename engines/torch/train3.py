@@ -17,7 +17,7 @@ import pickle
 
 
 run_name = "testing_finetuning"
-dataset_name = "endgame_subdata"
+dataset_name = "endgame_subdata2"
 data_folder = "../../data/Lichess_Elite_Database"
 allocated_memory = 30 # in GB Ram
 num_epochs = 30
@@ -82,11 +82,7 @@ dataloader = DataLoader(dataset, batch_size=1024, shuffle=True)
 train_size = int(0.9 * len(dataset))
 val_size = len(dataset) - train_size
 
-print("LEN BEFORE SPLIT", len(dataset))
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-print("LEN AFTER SPLIT", len(dataset))
-print("X len:", len(X))
-print("y len:", len(y))
 
 # Then create DataLoaders
 train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True)

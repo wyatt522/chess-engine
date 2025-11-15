@@ -4,7 +4,7 @@ from auxiliary_func import check_memory, load_dataset, encode_moves
 import pickle
 
 
-dataset_name = "endgame_subdata"
+dataset_name = "endgame_subdata2"
 move_to_int_name = "flipped_board_data"
 data_folder = "../../data/Lichess_Elite_Database"
 allocated_memory = 230 # in GB Ram
@@ -45,19 +45,23 @@ else:
 
     print(len(np_X))
     print(len(np_y))
-    X, y = np.array(np_X, dtype=np.float32), np.array(y, dtype=np.float32)
+    X, y = np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
     print(len(X))
     print(len(y))
 
+if len(X) == len(y):
 
-X = torch.tensor(X, dtype=torch.float32)
-y = torch.tensor(y, dtype=torch.long)
+    X = torch.tensor(X, dtype=torch.float32)
+    y = torch.tensor(y, dtype=torch.long)
 
-torch.save((X, y), f"{data_folder}/{dataset_name}_dataset.pth")
+    torch.save((X, y), f"{data_folder}/{dataset_name}_dataset.pth")
 
-print("Completed Data Processing", flush=True)
-print(f"GAMES PARSED: {games_parsed}", flush=True)
-print(f"FILES PARSED: {files_parsed}", flush=True)
-print(f"MOVES RECORDED: {len(y)}", flush=True)
-available_gb = check_memory()
-print(f"Available Memory: {available_gb}", flush=True)
+    print("Completed Data Processing", flush=True)
+    print(f"GAMES PARSED: {games_parsed}", flush=True)
+    print(f"FILES PARSED: {files_parsed}", flush=True)
+    print(f"MOVES RECORDED: {len(y)}", flush=True)
+    available_gb = check_memory()
+    print(f"Available Memory: {available_gb}", flush=True)
+
+else:
+    print("Error parsing data")
