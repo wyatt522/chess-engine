@@ -63,6 +63,8 @@ if dataset_usage == "generate":
 
 elif dataset_usage == "reuse":
     X, y = torch.load(f"{data_folder}/{dataset_name}_dataset.pth")
+    print(len(X))
+    print(len(y))
 
     with open(f"../../models/{dataset_name}_move_to_int", "rb") as file:
         move_to_int = pickle.load(file)
@@ -80,10 +82,11 @@ dataloader = DataLoader(dataset, batch_size=1024, shuffle=True)
 train_size = int(0.9 * len(dataset))
 val_size = len(dataset) - train_size
 
-print(train_size)
-print(val_size)
-print(len(dataset))
+print("LEN BEFORE SPLIT", len(dataset))
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+print("LEN AFTER SPLIT", len(dataset))
+print("X len:", len(X))
+print("y len:", len(y))
 
 # Then create DataLoaders
 train_loader = DataLoader(train_dataset, batch_size=1024, shuffle=True)
