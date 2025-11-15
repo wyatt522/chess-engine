@@ -20,7 +20,7 @@ run_name = "testing_finetuning"
 dataset_name = "endgame_subdata"
 data_folder = "../../data/Lichess_Elite_Database"
 allocated_memory = 30 # in GB Ram
-num_epochs = 3
+num_epochs = 30
 num_blocks = 8
 dataset_usage = "reuse"
 model_usage = "reuse"
@@ -80,6 +80,9 @@ dataloader = DataLoader(dataset, batch_size=1024, shuffle=True)
 train_size = int(0.9 * len(dataset))
 val_size = len(dataset) - train_size
 
+print(train_size)
+print(val_size)
+print(len(dataset))
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
 # Then create DataLoaders
@@ -164,7 +167,7 @@ for epoch in range(num_epochs):
     minutes: int = int(epoch_time // 60)
     seconds: int = int(epoch_time) - minutes * 60
 
-    if epoch % 20 == 0:
+    if epoch % 10 == 0:
         # Save the model
         torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")
     
