@@ -78,6 +78,29 @@ def create_input_for_nn(game, move_collection_prob = 0.15):
         board.push(move)
     return X, y
 
+def create_input_for_nn_endgame_select(game):
+    X = []
+    y = []
+
+    board = game.board()
+    move_num = 0
+    try:
+        complete_game = "#" in game.end().san()
+
+        if complete_game:
+            for move in game.mainline_moves():
+                move_num += 1
+                if move_num > 50 and len(board.piece_map()) < 10:
+                    X.append(board_to_matrix(board))
+                    y.append(move.uci())
+
+                board.push(move)
+    except Exception as e:
+        print(f"exception: " + e, flush=True)
+    finally:
+        return X, y
+
+
 
 def encode_moves(moves):
     move_to_int = {move: idx for idx, move in enumerate(set(moves))}
@@ -97,11 +120,11 @@ def load_dataset(data_folder, pgn_memory_mark = 3.0, file_limit = 80):
 
         for game in load_pgn(f"{data_folder}/{file}"):
             games_parsed += 1
-            x_temp, y_temp = create_input_for_nn(game)
+            x_temp, y_temp = create_input_for_nn_endgame_select(game)
             X.extend(x_temp)
             y.extend(y_temp)
 
-            if games_parsed % 100 == 0:
+            if games_parsed % 500 == 0:
                 available_gb = check_memory()
                 if available_gb < pgn_memory_mark:
                     print(f"Completed sampling {files_parsed} files with {available_gb} remaining", flush=True)
