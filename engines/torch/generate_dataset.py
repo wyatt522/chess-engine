@@ -5,6 +5,7 @@ import pickle
 
 
 dataset_name = "endgame_subdata"
+move_to_int_name = "flipped_board_data"
 data_folder = "../../data/Lichess_Elite_Database"
 allocated_memory = 230 # in GB Ram
 
@@ -30,7 +31,7 @@ if new_moves_to_int:
     with open(f"../../models/{dataset_name}_move_to_int", "wb") as file:
         pickle.dump(move_to_int, file)
 else:
-    with open(f"../../models/flipped_board_data_move_to_int", "rb") as file:
+    with open(f"../../models/{move_to_int_name}_move_to_int", "rb") as file:
         move_to_int = pickle.load(file)
     
     X = []

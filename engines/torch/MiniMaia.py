@@ -13,7 +13,7 @@ class MiniMaiaBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(64)
 
         self.relu = nn.ReLU()
-
+        self.flatten = nn.Flatten()
         self.sigmoid = nn.Sigmoid()
         self.avg_pool = nn.AvgPool2d(8)
         self.sq_fc1 = nn.Linear(64, 8)
@@ -52,8 +52,8 @@ class MiniMaia(nn.Module):
         self.final_layer = nn.Conv2d(64, 80, kernel_size=3, padding=1)
         self.init_bn = nn.BatchNorm2d(64)
         self.final_bn = nn.BatchNorm2d(80)
-        self.fc1 = nn.Linear(8 * 8 * 80, 128)
-        self.fc2 = nn.Linear(128, num_classes)
+        self.fc1 = nn.Linear(8 * 8 * 80, 512)
+        self.fc2 = nn.Linear(512, num_classes)
         
         self.mid_layers_list = []
         for i in range(num_blocks):
