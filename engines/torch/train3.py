@@ -16,14 +16,15 @@ import pickle
 
 
 
-run_name = "testing_finetuning"
-dataset_name = "endgame_subdata2"
+run_name = "minimaia_with_skip"
+dataset_name = "flipped_board_data"
 data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 30 # in GB Ram
+allocated_memory = 60 # in GB Ram
 num_epochs = 30
-num_blocks = 8
+num_blocks = 6
 dataset_usage = "reuse"
-model_usage = "reuse"
+double_dataset_test = True
+model_usage = "generate"
 reuse_model = "checkpoints/TORCH_60EPOCHS_maia_blocks_test_light_squeeze2.pth"
 
 
@@ -63,6 +64,11 @@ if dataset_usage == "generate":
 
 elif dataset_usage == "reuse":
     X, y = torch.load(f"{data_folder}/{dataset_name}_dataset.pth")
+    if double_dataset_test:
+        X2, y2 = torch.load(f"{data_folder}/endgame_subdata_dataset.pth")
+        X = torch.cat([X, X2], 1)
+        y = torch.cat([y, y2], 1)
+
     print(len(X))
     print(len(y))
 
