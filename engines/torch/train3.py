@@ -65,7 +65,7 @@ if dataset_usage == "generate":
 elif dataset_usage == "reuse":
     X, y = torch.load(f"{data_folder}/{dataset_name}_dataset.pth")
     if double_dataset_test:
-        X2, y2 = torch.load(f"{data_folder}/endgame_subdata_dataset2.pth")
+        X2, y2 = torch.load(f"{data_folder}/endgame_subdata2_dataset.pth")
         X = torch.cat([X, X2], 0)
         y = torch.cat([y, y2], 0)
 
