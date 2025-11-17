@@ -14,3 +14,6 @@ dist/*
 build/*
 *.err
 *.out
+*.spec
+models/*.pth
+models/*move_to_int

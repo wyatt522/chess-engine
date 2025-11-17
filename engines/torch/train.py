@@ -11,13 +11,13 @@ from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from auxiliary_func import check_memory, load_dataset, encode_moves
 from dataset import ChessDataset
-from model import ChessModel
-from model2 import ChessModel2
-from model3 import ChessModel3
-from model4 import ChessModel4
-from model5 import ChessModel5
-from model7 import ChessModel7
-from model8 import ChessModel8
+from deprecated_models.model import ChessModel
+from deprecated_models.model2 import ChessModel2
+from deprecated_models.model3 import ChessModel3
+from deprecated_models.model4 import ChessModel4
+from deprecated_models.model5 import ChessModel5
+from deprecated_models.model7 import ChessModel7
+from deprecated_models.model8 import ChessModel8
 import pickle
 
 

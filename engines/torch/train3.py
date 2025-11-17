@@ -10,17 +10,17 @@ from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from auxiliary_func import check_memory, load_dataset, encode_moves
 from dataset import ChessDataset
-from MiniMaia import MiniMaia
+from MiniMaia import MiniMaia, MiniMaiaFC
 import pickle
 
 
 
 
-run_name = "minimaia_with_skip"
+run_name = "minimaia_with_skip_fc"
 dataset_name = "flipped_board_data"
 data_folder = "../../data/Lichess_Elite_Database"
 allocated_memory = 60 # in GB Ram
-num_epochs = 30
+num_epochs = 70
 num_blocks = 6
 dataset_usage = "reuse"
 double_dataset_test = True
@@ -65,9 +65,9 @@ if dataset_usage == "generate":
 elif dataset_usage == "reuse":
     X, y = torch.load(f"{data_folder}/{dataset_name}_dataset.pth")
     if double_dataset_test:
-        X2, y2 = torch.load(f"{data_folder}/endgame_subdata_dataset.pth")
-        X = torch.cat([X, X2], 1)
-        y = torch.cat([y, y2], 1)
+        X2, y2 = torch.load(f"{data_folder}/endgame_subdata_dataset2.pth")
+        X = torch.cat([X, X2], 0)
+        y = torch.cat([y, y2], 0)
 
     print(len(X))
     print(len(y))
@@ -100,7 +100,7 @@ print(f'Using device: {device}', flush=True)
 
 # Model Initialization
 if model_usage == "generate":
-    model = MiniMaia(num_classes=num_classes, num_blocks=num_blocks).to(device)
+    model = MiniMaiaFC(num_classes=num_classes, num_blocks=num_blocks).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
@@ -172,7 +172,7 @@ for epoch in range(num_epochs):
     minutes: int = int(epoch_time // 60)
     seconds: int = int(epoch_time) - minutes * 60
 
-    if epoch % 10 == 0:
+    if epoch % 20 == 0:
         # Save the model
         torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")
     

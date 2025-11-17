@@ -85,7 +85,7 @@ class MiniMaia(nn.Module):
         return x7
 
 
-# Block based squeeze and excite net
+# Block based squeeze and excite net without fully connected final layers
 class MiniMaiaFC(nn.Module):
     def __init__(self, num_classes, num_blocks = 6):
         super(MiniMaiaFC, self).__init__()
@@ -109,8 +109,7 @@ class MiniMaiaFC(nn.Module):
         # Initialize weights
         nn.init.kaiming_uniform_(self.init_layer.weight, nonlinearity='relu')
         nn.init.kaiming_uniform_(self.final_layer.weight, nonlinearity='relu')
-        nn.init.xavier_uniform_(self.fc1.weight)
-        nn.init.xavier_uniform_(self.fc2.weight)
+        nn.init.xavier_uniform_(self.fc.weight)
 
     def forward(self, x):
         x1 = self.relu(self.init_bn(self.init_layer(x)))
