@@ -10,13 +10,13 @@ from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from auxiliary_func import check_memory, load_dataset, encode_moves
 from dataset import ChessDataset
-from MiniMaia import MiniMaia, MiniMaiaFC
+from MiniMaia import MiniMaia, MiniMaiaSkipFC
 import pickle
 
 
 
 
-run_name = "minimaia_with_skip_fc"
+run_name = "minimaia_regular"
 dataset_name = "flipped_board_data"
 data_folder = "../../data/Lichess_Elite_Database"
 allocated_memory = 60 # in GB Ram
@@ -100,7 +100,7 @@ print(f'Using device: {device}', flush=True)
 
 # Model Initialization
 if model_usage == "generate":
-    model = MiniMaiaFC(num_classes=num_classes, num_blocks=num_blocks).to(device)
+    model = MiniMaia(num_classes=num_classes, num_blocks=num_blocks).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
