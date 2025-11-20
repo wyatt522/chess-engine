@@ -1,43 +1,26 @@
 import sys
-from auxiliary_func import board_to_matrix
+from auxiliary_func import prepare_input, probabilities_to_move
 import torch
-from model import ChessModel
-from model4 import ChessModel4
-from model7 import ChessModel7
+from MiniMaia import MiniMaiaSkipFC
 import pickle
 import numpy as np
-import chess
 from chess import Board
-import random
 
 import os
 import time
 import torch
-from torch.utils.data import DataLoader # type: ignore
-from chess import pgn # type: ignore
-from tqdm import tqdm # type: ignore
-
-
-
-# -----------------------------
-# Model + Prediction Functions
-# -----------------------------
-
-def prepare_input(board: Board):
-    matrix = board_to_matrix(board)  # <-- You need your board_to_matrix implementation here
-    X_tensor = torch.tensor(matrix, dtype=torch.float32).unsqueeze(0)
-    return X_tensor
 
 
 # Detect if running from PyInstaller bundle
 if getattr(sys, 'frozen', False):
     BASE_DIR = sys._MEIPASS       # temp folder where PyInstaller unpacks files
+    TABLEBASE_PATH = os.path.join(os.path.dirname(__file__), BASE_DIR, "/gaviota")
 else:
-    BASE_DIR = os.path.join(os.path.dirname(__file__), "../../../")  # normal script location
+    BASE_DIR = os.path.join(os.path.dirname(__file__), "../../")  # normal script location
+    TABLEBASE_PATH = os.path.join(os.path.dirname(__file__), BASE_DIR, "../Gaviota/gaviota")
 
-MODEL_PATH = os.path.join(BASE_DIR, f"models/squeeze_and_excite_test2_final_model.pth")
+MODEL_PATH = os.path.join(BASE_DIR, f"models/minimaia_with_skip_fc.pth")
 MAPPING_PATH = os.path.join(BASE_DIR, f"models/flipped_board_data_move_to_int")
-
 # Load mapping
 with open(MAPPING_PATH, "rb") as file:
     move_to_int = pickle.load(file)
@@ -47,44 +30,10 @@ int_to_move = {v: k for k, v in move_to_int.items()}
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
-model = ChessModel7(num_classes=len(move_to_int))
+model = MiniMaiaSkipFC(num_classes=len(move_to_int))
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.to(device)
 model.eval()
-
-def predict_move(board: Board, pseudo_temp: int = 4):
-    X_tensor = prepare_input(board).to(device)
-    
-    with torch.no_grad():
-        logits = model(X_tensor)
-    
-    logits = logits.squeeze(0)  # Remove batch dimension
-    
-    probabilities = torch.softmax(logits, dim=0).cpu().numpy()  # Convert to probabilities
-    argsort = np.argsort(probabilities)[::-1] # record what moves sorted probs correspond to
-
-
-    sorted_probs = probabilities
-    sorted_probs.sort()
-    sorted_probs = sorted_probs[::-1]
-    legal_moves = list(board.legal_moves)
-    legal_moves_uci = [move.uci() for move in legal_moves]
-    # sorted_indices = np.argsort(probabilities)[::-1]
-    for i in range(10): # try finding a legal move 10 times first
-        selection = random.random() ** pseudo_temp
-        collective_sum = 0
-        idx = 0
-        for prob in sorted_probs:
-            # print(prob)
-            collective_sum += prob
-            if selection < collective_sum:
-                move = int_to_move[argsort[idx]]
-                if move in legal_moves_uci:
-                    return move
-                else:
-                    break
-            idx += 1
-    return None
 
 # -----------------------------
 # UCI Protocol Loop
@@ -92,6 +41,8 @@ def predict_move(board: Board, pseudo_temp: int = 4):
 
 def uci_loop():
     board = Board()
+    endgame_boost = 0.8
+    psuedo_temp = 2
     while True:
         line = sys.stdin.readline().strip()
         if not line:
@@ -106,6 +57,16 @@ def uci_loop():
         elif line == "isready":
             print("readyok")
             sys.stdout.flush()
+        
+        # elif line.startswith("setoption name"):
+        #     parts = line.split(" ")
+        #     if "temperature" in parts:
+        #         temp_idx = parts.index("temperature") + 1
+        #         if 0 < parts[temp_idx]:
+        #             psuedo_temp = parts[temp_idx]
+
+        #     if ""
+
 
         elif line.startswith("position"):
             parts = line.split(" ")
@@ -125,7 +86,16 @@ def uci_loop():
                         board.push_uci(move)
 
         elif line.startswith("go"):
-            best_move = predict_move(board)
+            X_tensor = prepare_input(board).to(device)
+    
+            with torch.no_grad():
+                logits = model(X_tensor)
+            
+            logits = logits.squeeze(0)  # Remove batch dimension
+            probabilities = torch.softmax(logits, dim=0).cpu().numpy()  # Convert to probabilities
+
+            best_move = probabilities_to_move(probabilities=probabilities, int_to_move=int_to_move, board=board, tablebase_path=TABLEBASE_PATH)
+
             if best_move:
                 print(f"bestmove {best_move}")
                 sys.stdout.flush()

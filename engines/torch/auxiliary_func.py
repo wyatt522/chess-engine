@@ -4,6 +4,8 @@ from tqdm import tqdm # type: ignore
 import psutil
 import random
 import os
+import torch
+import chess.gaviota
 
 
 def board_to_matrix(board: Board):
@@ -135,3 +137,68 @@ def load_dataset(data_folder, pgn_memory_mark = 3.0, file_limit = 80):
             available_gb = check_memory()
             print(f"Completed sampling limit of files with {available_gb} remaining", flush=True)
             return X, y, games_parsed, files_parsed
+        
+
+def prepare_input(board: Board):
+    matrix = board_to_matrix(board)
+    X_tensor = torch.tensor(matrix, dtype=torch.float32).unsqueeze(0)
+    return X_tensor
+
+# Function to make predictions
+def probabilities_to_move(probabilities: np.ndarray, int_to_move: dict, board: Board, pseudo_temp: int = 2, endgame_safety: float = 0.75, tablebase_path: str = "/home/wyatt/Documents/capstone/Gaviota/gaviota"):
+    
+    argsort = np.argsort(probabilities)[::-1] # record what moves sorted probs correspond to
+    sorted_probs = probabilities
+    sorted_probs.sort()
+    sorted_probs = sorted_probs[::-1]
+    legal_moves = list(board.legal_moves)
+    legal_moves_uci = [move.uci() for move in legal_moves]
+
+    # # endgame process
+    endgame_safety_select = random.random()
+    if len(board.piece_map()) < 6 and endgame_safety_select < endgame_safety: 
+        with chess.gaviota.open_tablebase(tablebase_path) as tablebase:
+            curr_dtm = tablebase.probe_dtm(board)
+            if curr_dtm > 0:
+                for idx, prob in enumerate(sorted_probs):
+                    move = int_to_move[argsort[idx]]
+                    if idx > 20:
+                        break
+                    if move not in legal_moves_uci:
+                        continue
+                    
+                    board.push_uci(move)
+                    temp_dtm = tablebase.probe_dtm(board)
+
+                    if board.is_checkmate():
+                        board.pop()
+                        return move
+                    if 0 < -temp_dtm < curr_dtm:
+                        board.pop()
+                        return move
+                    else:
+                        board.pop()
+
+    
+    for i in range(10): # try finding a random legal move 10 times
+        selection = random.random() ** pseudo_temp
+        collective_sum = 0
+        idx = 0
+        for prob in sorted_probs:
+            collective_sum += prob
+            if selection < collective_sum:
+                move = int_to_move[argsort[idx]]
+                if move in legal_moves_uci:
+                    return move
+                else:
+                    break
+            idx += 1
+
+    # selects most popular move
+    idx = 0
+    for prob in sorted_probs:
+        move = int_to_move[argsort[idx]]
+        if move in legal_moves_uci:
+            return move
+        idx += 1
+    return None
