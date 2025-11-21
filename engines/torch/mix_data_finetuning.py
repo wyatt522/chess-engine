@@ -21,7 +21,7 @@ allocated_memory = 60 # in GB Ram
 num_epochs = 10
 num_blocks = 6
 double_dataset_test = True
-reuse_model = "../../models/minimaia_with_skip_512.pth"
+reuse_model = "../../models/minimaia_with_skip_1024.pth"
 
 
 
