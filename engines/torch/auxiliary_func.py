@@ -64,7 +64,7 @@ def load_pgn(file_path):
                 break
             yield game
 
-def create_input_for_nn(game, move_collection_prob = 0.15):
+def create_input_for_nn(game, move_collection_prob = 0.15, endgame_select = True):
     X = []
     y = []
 
@@ -72,10 +72,35 @@ def create_input_for_nn(game, move_collection_prob = 0.15):
     move_num = 0
     for move in game.mainline_moves():
         move_num += 1
-        mult = 2 if move_num > 40 else 1
+        if endgame_select:
+            mult = 2 if move_num > 40 else 1
         if random.random() < move_collection_prob*mult:
             X.append(board_to_matrix(board))
             y.append(move.uci())
+
+        board.push(move)
+    return X, y
+
+def create_input_for_nn_personal(game, user, move_collection_prob = 0.15, earlygame_select = True):
+    headers = game.headers
+    if headers["White"] == user:
+        select_player = chess.WHITE
+    elif headers["Black"] == user:
+        select_player = chess.BLACK
+
+    X = []
+    y = []
+
+    board = game.board()
+    move_num = 0
+    for move in game.mainline_moves():
+        move_num += 1
+        if board.turn == select_player:
+            if earlygame_select:
+                mult = 2 if move_num < 15 else 1
+            if random.random() < move_collection_prob*mult:
+                X.append(board_to_matrix(board))
+                y.append(move.uci())
 
         board.push(move)
     return X, y
@@ -122,7 +147,7 @@ def load_dataset(data_folder, pgn_memory_mark = 3.0, file_limit = 80):
 
         for game in load_pgn(f"{data_folder}/{file}"):
             games_parsed += 1
-            x_temp, y_temp = create_input_for_nn_endgame_select(game)
+            x_temp, y_temp = create_input_for_nn_personal(game, "KaiNakamura", move_collection_prob=0.35, earlygame_select=True)
             X.extend(x_temp)
             y.extend(y_temp)
 

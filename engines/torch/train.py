@@ -82,7 +82,6 @@ elif dataset_usage == "reuse":
 
 # Create Dataset
 dataset = ChessDataset(X, y)
-dataloader = DataLoader(dataset, batch_size=1024, shuffle=True)
 
 # Compute split sizes
 train_size = int(0.9 * len(dataset))

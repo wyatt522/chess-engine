@@ -4,10 +4,10 @@ from auxiliary_func import check_memory, load_dataset, encode_moves
 import pickle
 
 
-dataset_name = "endgame_subdata2"
+dataset_name = "kai_nakamura"
 move_to_int_name = "flipped_board_data"
-data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 230 # in GB Ram
+data_folder = "../../data/kai"
+allocated_memory = 4 # in GB Ram
 
 new_moves_to_int = False
 
