@@ -13,14 +13,13 @@ import pickle
 
 
 
-run_name = "kai_minimaia"
+run_name = "kai_minimaia_freeze"
 move_to_int = "flipped_board_data"
 original_dataset = "../../data/Lichess_Elite_Database/flipped_board_data_dataset.pth"
 finetuning_dataset = "../../data/kai/kai_nakamura_dataset.pth"
 allocated_memory = 60 # in GB Ram
 num_epochs = 10
 num_blocks = 6
-double_dataset_test = True
 reuse_model = "../../models/minimaia_with_skip_1024.pth"
 
 
@@ -70,11 +69,20 @@ print(f'Using device: {device}', flush=True)
 
 model = MiniMaiaSkip(num_classes=num_classes, num_blocks=num_blocks, squeeze_layer=1024)
 model.load_state_dict(torch.load(reuse_model, weights_only=True, map_location=device))
+
+# Freeze everything except final fully connected layers
+for name, child in model.named_children():
+    for param in child.parameters():
+        if name == 'fc1' or name == 'fc2':
+            param.requires_grad = True
+        else:
+            param.requires_grad = False
+
 model.to(device)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.00002)
+optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.00002)
 
-scheduler = MultiStepLR(optimizer, milestones=[100000], gamma=0.2)
+scheduler = MultiStepLR(optimizer, milestones=[500000], gamma=0.2)
 
 # Get current time in a readable format
 current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
