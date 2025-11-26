@@ -1,7 +1,7 @@
 import sys
 from auxiliary_func import prepare_input, probabilities_to_move
 import torch
-from MiniMaia import MiniMaiaSkipFC
+from MiniMaia import MiniMaiaSkip
 import pickle
 import numpy as np
 from chess import Board
@@ -19,8 +19,8 @@ else:
     BASE_DIR = os.path.join(os.path.dirname(__file__), "../../")  # normal script location
     TABLEBASE_PATH = os.path.join(os.path.dirname(__file__), BASE_DIR, "../Gaviota/gaviota")
 
-MODEL_PATH = os.path.join(BASE_DIR, f"models/minimaia_with_skip_fc.pth")
-MAPPING_PATH = os.path.join(BASE_DIR, f"models/flipped_board_data_move_to_int")
+MODEL_PATH = os.path.join(BASE_DIR, "models/kai_minimaia_freeze_final_model.pth")
+MAPPING_PATH = os.path.join(BASE_DIR, "models/flipped_board_data_move_to_int")
 # Load mapping
 with open(MAPPING_PATH, "rb") as file:
     move_to_int = pickle.load(file)
@@ -30,7 +30,7 @@ int_to_move = {v: k for k, v in move_to_int.items()}
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
-model = MiniMaiaSkipFC(num_classes=len(move_to_int))
+model = MiniMaiaSkip(num_classes=len(move_to_int))
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.to(device)
 model.eval()
@@ -41,8 +41,8 @@ model.eval()
 
 def uci_loop():
     board = Board()
-    endgame_boost = 0.8
-    psuedo_temp = 2
+    endgame_boost = 0.9
+    psuedo_temp = 5
     while True:
         line = sys.stdin.readline().strip()
         if not line:
@@ -94,7 +94,9 @@ def uci_loop():
             logits = logits.squeeze(0)  # Remove batch dimension
             probabilities = torch.softmax(logits, dim=0).cpu().numpy()  # Convert to probabilities
 
-            best_move = probabilities_to_move(probabilities=probabilities, int_to_move=int_to_move, board=board, tablebase_path=TABLEBASE_PATH)
+            best_move = probabilities_to_move(probabilities=probabilities, int_to_move=int_to_move, 
+                                                board=board, pseudo_temp=psuedo_temp, endgame_safety=endgame_boost, 
+                                                tablebase_path=TABLEBASE_PATH)
 
             if best_move:
                 print(f"bestmove {best_move}")

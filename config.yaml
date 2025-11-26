@@ -1,0 +1,4 @@
+GaviotaPath: /home/wyatt/Documents/capstone/Gaviota/gaviota
+ModelPath: /home/wyatt/Documents/capstone/chess-engine/models/kai_minimaia_freeze_final_model.pth
+PsuedoTemp: 10
+EndgameCorrection: 0.9
