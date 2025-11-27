@@ -21,7 +21,7 @@ else:
 MODEL_PATH = os.path.join(BASE_DIR, "models/kai_minimaia_freeze_final_model.pth")
 MAPPING_PATH = os.path.join(BASE_DIR, "models/flipped_board_data_move_to_int")
 
-with open(os.path.join(BASE_DIR, "config.yaml")) as file:
+with open(os.path.join(BASE_DIR, "uci_config.yaml")) as file:
     config = yaml.safe_load(file)
 
 MODEL_PATH = config['ModelPath']
@@ -66,7 +66,7 @@ def uci_loop():
         elif line == "isready":
             print("readyok")
             sys.stdout.flush()
-            
+
         elif line == "printboard":
             print(board)
         

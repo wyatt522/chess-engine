@@ -2,14 +2,25 @@ import numpy as np # type: ignore
 import torch
 from auxiliary_func import check_memory, load_dataset, encode_moves
 import pickle
+import yaml
+
+with open("../../training_config.yaml") as file:
+    config = yaml.safe_load(file)
 
 
-dataset_name = "kai_nakamura"
-move_to_int_name = "flipped_board_data"
-data_folder = "../../data/kai"
-allocated_memory = 4 # in GB Ram
+username = config["username"]
+move_to_int_name = config["moveEncoding"]
+allocated_memory = config["memory"]
+download = config["download"]
 
-new_moves_to_int = False
+dataset_name = username
+data_folder = f"../../data/{username}"
+
+new_moves_to_int = config["generateEncoding"]
+
+if download:
+    from auxiliary_func import download_dataset
+    download_dataset(username, curr_year=2025, tot_years=4)
 
 
 # Calcute memory distribution so that 4/7 is dedicated to dataset pre tensor conversion, 3/7 saved for after
@@ -21,7 +32,8 @@ pgn_memory_mark = total_mem - (4*allocated_memory)/7
 print(pgn_memory_mark, flush=True)
 
 
-np_X, np_y, games_parsed, files_parsed = load_dataset(data_folder=data_folder, pgn_memory_mark=pgn_memory_mark)
+np_X, np_y, games_parsed, files_parsed = load_dataset(data_folder=data_folder, pgn_memory_mark=pgn_memory_mark,
+                                                      selection="personal", name = username)
 
 
 np_X, np_y = np.array(np_X, dtype=np.float32), np.array(np_y)

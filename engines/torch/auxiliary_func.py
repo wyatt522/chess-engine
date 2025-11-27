@@ -6,6 +6,7 @@ import random
 import os
 import torch
 import chess.gaviota
+import urllib.request
 
 
 def board_to_matrix(board: Board):
@@ -81,15 +82,18 @@ def create_input_for_nn(game, move_collection_prob = 0.15, endgame_select = True
         board.push(move)
     return X, y
 
-def create_input_for_nn_personal(game, user, move_collection_prob = 0.15, earlygame_select = True):
+def create_input_for_nn_personal(game, user, move_collection_prob = 0.15, earlygame_select = True, time_control = None):
     headers = game.headers
+    X = []
+    y = []
+
+    if time_control and headers["TimeControl"] not in time_control:
+        return X, y
+
     if headers["White"] == user:
         select_player = chess.WHITE
     elif headers["Black"] == user:
         select_player = chess.BLACK
-
-    X = []
-    y = []
 
     board = game.board()
     move_num = 0
@@ -106,6 +110,7 @@ def create_input_for_nn_personal(game, user, move_collection_prob = 0.15, earlyg
     return X, y
 
 def create_input_for_nn_endgame_select(game):
+
     X = []
     y = []
 
@@ -133,7 +138,7 @@ def encode_moves(moves):
     move_to_int = {move: idx for idx, move in enumerate(set(moves))}
     return np.array([move_to_int[move] for move in moves], dtype=np.float32), move_to_int
 
-def load_dataset(data_folder, pgn_memory_mark = 3.0, file_limit = 80):
+def load_dataset(data_folder, pgn_memory_mark = 3.0, file_limit = 80, selection = "normal", name = None):
     files = [file for file in os.listdir(data_folder) if file.endswith(".pgn")]
     # Sort by file size (ascending)
     files_sorted = sorted(files, key=lambda f: os.path.getsize(os.path.join(data_folder, f)))
@@ -147,7 +152,17 @@ def load_dataset(data_folder, pgn_memory_mark = 3.0, file_limit = 80):
 
         for game in load_pgn(f"{data_folder}/{file}"):
             games_parsed += 1
-            x_temp, y_temp = create_input_for_nn_personal(game, "KaiNakamura", move_collection_prob=0.35, earlygame_select=True)
+
+            if selection == "normal":
+                x_temp, y_temp = create_input_for_nn(game, move_collection_prob=0.35)
+            elif selection == "personal":
+                if name:
+                    x_temp, y_temp = create_input_for_nn_personal(game, name, move_collection_prob=0.35, earlygame_select=True, time_control=["600", "300", "180", "180+2"])
+                else:
+                    print("select name")
+            elif selection == "endgame":
+                x_temp, y_temp = create_input_for_nn_endgame_select(game)
+            
             X.extend(x_temp)
             y.extend(y_temp)
 
@@ -227,3 +242,25 @@ def probabilities_to_move(probabilities: np.ndarray, int_to_move: dict, board: B
             return move
         idx += 1
     return None
+
+
+def download_dataset(username: str, curr_year = 2025, tot_years = 4):
+    path = f"../../data/{username}"
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    for y in range (tot_years):
+        year = curr_year - y
+        for m in range(12):
+            m_r = m + 1
+            month = f"{m_r:02d}"
+            http_path = f"https://api.chess.com/pub/player/{username}/games/{year}/{month}/pgn"
+            try:
+                save_path, msg = urllib.request.urlretrieve(http_path, f"{path}/{year}{month}.pgn")
+            except Exception as e:
+                print(f"Error: {e}")
+                print(f"request failed for {month}-{year}")
+            
+
+
+    

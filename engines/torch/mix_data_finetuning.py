@@ -10,18 +10,23 @@ from datetime import datetime
 from dataset import ChessDataset
 from MiniMaia import MiniMaia, MiniMaiaSkip, MiniMaiaSkipFC
 import pickle
+import yaml
+
+
+with open("../../training_config.yaml") as file:
+    config = yaml.safe_load(file)
 
 
 
-run_name = "kai_minimaia_freeze"
-move_to_int = "flipped_board_data"
+run_name = config["username"]
+finetuning_dataset = f"../../data/{run_name}/{run_name}_dataset.pth"
+
+reuse_model = "../../models/minimaia_with_skip_1024.pth"
+move_to_int = config["moveEncoding"]
 original_dataset = "../../data/Lichess_Elite_Database/flipped_board_data_dataset.pth"
-finetuning_dataset = "../../data/kai/kai_nakamura_dataset.pth"
-allocated_memory = 60 # in GB Ram
+
 num_epochs = 10
 num_blocks = 6
-reuse_model = "../../models/minimaia_with_skip_1024.pth"
-
 
 
 X0, y0 = torch.load(original_dataset)
@@ -162,9 +167,6 @@ for epoch in range(num_epochs):
     minutes: int = int(epoch_time // 60)
     seconds: int = int(epoch_time) - minutes * 60
 
-    if epoch % 10 == 0:
-        # Save the model
-        torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")
     
     current_lr = scheduler.get_last_lr()[0]
     print(f'Steps: {steps}, Epoch: {epoch + 1}/{num_epochs}, Training Loss: {running_loss / len(train_loaderf):.4f}, Validation Loss Original: {val_loss0 / len(val_loader0):.4f}, Validation Loss Finetuning: {val_lossf / len(val_loaderf):.4f}, Time: {minutes}m{seconds}s, Learning Rate: {current_lr}', flush=True)
@@ -177,4 +179,4 @@ writer.close()
 
 
 # Save the model
-torch.save(model.state_dict(), f"../../models/{run_name}_final_model.pth")
+torch.save(model.state_dict(), f"../../models/{run_name}_model.pth")
