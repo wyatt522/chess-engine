@@ -9,18 +9,29 @@ from chess import Board
 import os
 import time
 import torch
+import yaml
 
 
 # Detect if running from PyInstaller bundle
 if getattr(sys, 'frozen', False):
     BASE_DIR = sys._MEIPASS       # temp folder where PyInstaller unpacks files
-    TABLEBASE_PATH = os.path.join(os.path.dirname(__file__), BASE_DIR, "/gaviota")
 else:
     BASE_DIR = os.path.join(os.path.dirname(__file__), "../../")  # normal script location
-    TABLEBASE_PATH = os.path.join(os.path.dirname(__file__), BASE_DIR, "../Gaviota/gaviota")
 
 MODEL_PATH = os.path.join(BASE_DIR, "models/kai_minimaia_freeze_final_model.pth")
 MAPPING_PATH = os.path.join(BASE_DIR, "models/flipped_board_data_move_to_int")
+
+with open(os.path.join(BASE_DIR, "config.yaml")) as file:
+    config = yaml.safe_load(file)
+
+MODEL_PATH = config['ModelPath']
+MAPPING_PATH = config['MoveToIntPath']
+TABLEBASE_PATH = config['GaviotaPath']
+
+
+psuedo_temp = config.get("PseudoTemp", 5)
+endgame_boost = config.get("EndgameCorrection", 0.9)
+
 # Load mapping
 with open(MAPPING_PATH, "rb") as file:
     move_to_int = pickle.load(file)
@@ -41,8 +52,6 @@ model.eval()
 
 def uci_loop():
     board = Board()
-    endgame_boost = 0.9
-    psuedo_temp = 5
     while True:
         line = sys.stdin.readline().strip()
         if not line:
@@ -57,6 +66,9 @@ def uci_loop():
         elif line == "isready":
             print("readyok")
             sys.stdout.flush()
+            
+        elif line == "printboard":
+            print(board)
         
         # elif line.startswith("setoption name"):
         #     parts = line.split(" ")
