@@ -18,19 +18,20 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = os.path.join(os.path.dirname(__file__), "../../")  # normal script location
 
-MODEL_PATH = os.path.join(BASE_DIR, "models/kai_minimaia_freeze_final_model.pth")
-MAPPING_PATH = os.path.join(BASE_DIR, "models/flipped_board_data_move_to_int")
-
 with open(os.path.join(BASE_DIR, "uci_config.yaml")) as file:
     config = yaml.safe_load(file)
 
-MODEL_PATH = config['ModelPath']
 MAPPING_PATH = config['MoveToIntPath']
 TABLEBASE_PATH = config['GaviotaPath']
 
+ModelWeights = config["ModelWeights"]
 
-psuedo_temp = config.get("PseudoTemp", 5)
-endgame_boost = config.get("EndgameCorrection", 0.9)
+move_selection_options = {}
+move_selection_options["PsuedoTemp"] = config.get("PseudoTemp", 5)
+move_selection_options["StartGameTemp"] = config.get("StartGameTemp", 1.5)
+move_selection_options["EarlyGameTemp"] = config.get("EarlyGameTemp", 3)
+
+move_selection_options["EndgameCorrection"] = config.get("EndgameCorrection", 0.9)
 
 # Load mapping
 with open(MAPPING_PATH, "rb") as file:
@@ -42,7 +43,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
 model = MiniMaiaSkip(num_classes=len(move_to_int))
-model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+model.load_state_dict(torch.load(ModelWeights["default"], map_location=device))
 model.to(device)
 model.eval()
 
@@ -52,15 +53,24 @@ model.eval()
 
 def uci_loop():
     board = Board()
+    model_weights_name = "default"
     while True:
         line = sys.stdin.readline().strip()
         if not line:
             continue
 
         if line == "uci":
-            print("id name TorchEngine")
+            print("id name MiniMaiaBot")
             print("id author Wyatt")
+            print("option name StartGameTemp type spin default 1500 min 500 max 10000")
+            print("option name EarlyGameTemp type spin default 3000 min 500 max 10000")
+            print("option name PsuedoTemp type spin default 5000 min 500 max 10000")
+            print("option name EndgameCorrection type spin default 900 min 1 max 1000")
+            print("option name ModelWeights type string default default")
+            
             print("uciok")
+
+
             sys.stdout.flush()
 
         elif line == "isready":
@@ -70,14 +80,19 @@ def uci_loop():
         elif line == "printboard":
             print(board)
         
-        # elif line.startswith("setoption name"):
-        #     parts = line.split(" ")
-        #     if "temperature" in parts:
-        #         temp_idx = parts.index("temperature") + 1
-        #         if 0 < parts[temp_idx]:
-        #             psuedo_temp = parts[temp_idx]
-
-        #     if ""
+        elif line.startswith("setoption name"):
+            parts = line.split(" ")
+            if "name" in parts and "value" in parts:
+                name_idx = parts.index("name") + 1
+                val_idx = parts.index("value") + 1
+                if parts[name_idx] == "ModelWeights":
+                    if parts[val_idx] in ModelWeights and parts[val_idx] != model_weights_name:
+                        model_weights_name = parts[val_idx]
+                        model.load_state_dict(torch.load(ModelWeights[model_weights_name], map_location=device))
+                    else:
+                        pass
+                else:
+                    move_selection_options[parts[name_idx]] = int(parts[val_idx])/1000
 
 
         elif line.startswith("position"):
@@ -106,8 +121,15 @@ def uci_loop():
             logits = logits.squeeze(0)  # Remove batch dimension
             probabilities = torch.softmax(logits, dim=0).cpu().numpy()  # Convert to probabilities
 
+            if len(board.piece_map()) == 32:
+                temp = move_selection_options["StartGameTemp"]
+            elif len(board.piece_map()) > 29:
+                temp = move_selection_options["EarlyGameTemp"] 
+            else:
+                temp = move_selection_options["PsuedoTemp"]
+
             best_move = probabilities_to_move(probabilities=probabilities, int_to_move=int_to_move, 
-                                                board=board, pseudo_temp=psuedo_temp, endgame_safety=endgame_boost, 
+                                                board=board, pseudo_temp=temp, endgame_safety=move_selection_options["EndgameCorrection"], 
                                                 tablebase_path=TABLEBASE_PATH)
 
             if best_move:

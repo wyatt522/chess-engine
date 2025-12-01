@@ -194,7 +194,7 @@ def probabilities_to_move(probabilities: np.ndarray, int_to_move: dict, board: B
     legal_moves = list(board.legal_moves)
     legal_moves_uci = [move.uci() for move in legal_moves]
 
-    # # endgame process
+    # endgame process
     endgame_safety_select = random.random()
     if len(board.piece_map()) < 6 and endgame_safety_select < endgame_safety: 
         with chess.gaviota.open_tablebase(tablebase_path) as tablebase:
@@ -202,7 +202,7 @@ def probabilities_to_move(probabilities: np.ndarray, int_to_move: dict, board: B
             if curr_dtm > 0:
                 for idx, prob in enumerate(sorted_probs):
                     move = int_to_move[argsort[idx]]
-                    if idx > 20:
+                    if idx > 10:
                         break
                     if move not in legal_moves_uci:
                         continue
@@ -220,7 +220,7 @@ def probabilities_to_move(probabilities: np.ndarray, int_to_move: dict, board: B
                         board.pop()
 
     
-    for i in range(10): # try finding a random legal move 10 times
+    for i in range(20): # try finding a random legal move 20 times
         selection = random.random() ** pseudo_temp
         collective_sum = 0
         idx = 0
@@ -234,7 +234,7 @@ def probabilities_to_move(probabilities: np.ndarray, int_to_move: dict, board: B
                     break
             idx += 1
 
-    # selects most popular move
+    # selects most likely legal move
     idx = 0
     for prob in sorted_probs:
         move = int_to_move[argsort[idx]]
