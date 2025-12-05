@@ -21,7 +21,7 @@ with open("../../training_config.yaml") as file:
 run_name = config["username"]
 finetuning_dataset = f"../../data/{run_name}/{run_name}_dataset.pth"
 
-reuse_model = "../../models/minimaia_with_skip_fc_final_model.pth"
+reuse_model = "../../models/minimaia_with_skip_1024.pth"
 move_to_int = config["moveEncoding"]
 original_dataset = "../../data/Lichess_Elite_Database/flipped_board_data_dataset.pth"
 
@@ -72,16 +72,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}', flush=True)
 
 
-model = MiniMaiaSkipFC(num_classes=num_classes, num_blocks=num_blocks, squeeze_layer=1024)
+model = MiniMaiaSkip(num_classes=num_classes, num_blocks=num_blocks, squeeze_layer=1024)
 model.load_state_dict(torch.load(reuse_model, weights_only=True, map_location=device))
 
-# # Freeze everything except final fully connected layers
-# for name, child in model.named_children():
-#     for param in child.parameters():
-#         if name == 'fc1' or name == 'fc2':
-#             param.requires_grad = True
-#         else:
-#             param.requires_grad = False
+# Freeze everything except final fully connected layers
+for name, child in model.named_children():
+    for param in child.parameters():
+        if name == 'fc1' or name == 'fc2':
+            param.requires_grad = True
+        else:
+            param.requires_grad = False
 
 model.to(device)
 criterion = nn.CrossEntropyLoss()
