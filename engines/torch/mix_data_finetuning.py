@@ -21,7 +21,7 @@ with open("../../training_config.yaml") as file:
 run_name = config["username"]
 finetuning_dataset = f"../../data/{run_name}/{run_name}_dataset.pth"
 
-reuse_model = "../../models/minimaia_with_skip_1024.pth"
+reuse_model = "../../models/minimaia_with_skip_fc_final_model.pth"
 move_to_int = config["moveEncoding"]
 original_dataset = "../../data/Lichess_Elite_Database/flipped_board_data_dataset.pth"
 
@@ -72,16 +72,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}', flush=True)
 
 
-model = MiniMaiaSkip(num_classes=num_classes, num_blocks=num_blocks, squeeze_layer=1024)
+model = MiniMaiaSkipFC(num_classes=num_classes, num_blocks=num_blocks, squeeze_layer=1024)
 model.load_state_dict(torch.load(reuse_model, weights_only=True, map_location=device))
 
-# Freeze everything except final fully connected layers
-for name, child in model.named_children():
-    for param in child.parameters():
-        if name == 'fc1' or name == 'fc2':
-            param.requires_grad = True
-        else:
-            param.requires_grad = False
+# # Freeze everything except final fully connected layers
+# for name, child in model.named_children():
+#     for param in child.parameters():
+#         if name == 'fc1' or name == 'fc2':
+#             param.requires_grad = True
+#         else:
+#             param.requires_grad = False
 
 model.to(device)
 criterion = nn.CrossEntropyLoss()
@@ -161,6 +161,7 @@ for epoch in range(num_epochs):
     # Stats
     avg_train_loss = running_loss / len(train_loaderf)
     avg_val_lossf = val_lossf / len(val_loaderf)
+    avg_val_loss0 = val_loss0 / len(val_loader0)
 
     end_time = time.time()
     epoch_time = end_time - start_time
@@ -169,10 +170,12 @@ for epoch in range(num_epochs):
 
     
     current_lr = scheduler.get_last_lr()[0]
-    print(f'Steps: {steps}, Epoch: {epoch + 1}/{num_epochs}, Training Loss: {running_loss / len(train_loaderf):.4f}, Validation Loss Original: {val_loss0 / len(val_loader0):.4f}, Validation Loss Finetuning: {val_lossf / len(val_loaderf):.4f}, Time: {minutes}m{seconds}s, Learning Rate: {current_lr}', flush=True)
+    print(f'Steps: {steps}, Epoch: {epoch + 1}/{num_epochs}, Training Loss: {avg_train_loss:.4f}, Validation Loss Original: {avg_val_loss0:.4f}, Validation Loss Finetuning: {avg_val_lossf:.4f}, Time: {minutes}m{seconds}s, Learning Rate: {current_lr}', flush=True)
 
     writer.add_scalar("Loss/train", avg_train_loss, epoch + 1)
     writer.add_scalar("Loss/validation", avg_val_lossf, epoch + 1)
+    writer.add_scalar("Loss/original_data_validation", avg_val_loss0, epoch + 1)
+
 
 writer.close()
 
