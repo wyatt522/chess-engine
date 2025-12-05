@@ -12,26 +12,29 @@ from auxiliary_func import check_memory, load_dataset, encode_moves
 from dataset import ChessDataset
 from MiniMaia import MiniMaia, MiniMaiaSkipFC
 import pickle
+import yaml
 
 
 
+with open("../../training_config.yaml") as file:
+    config = yaml.safe_load(file)
 
-run_name = "minimaia_regular"
-dataset_name = "flipped_board_data"
-data_folder = "../../data/Lichess_Elite_Database"
+move_to_int_name = config["moveEncoding"]
+run_name = config["username"]
+dataset_name = "LowElo"
+data_folder = "../../data/monthly_lichess_data"
 allocated_memory = 60 # in GB Ram
-num_epochs = 70
+num_epochs = 30
 num_blocks = 6
 dataset_usage = "reuse"
-double_dataset_test = True
-model_usage = "generate"
-reuse_model = "checkpoints/TORCH_60EPOCHS_maia_blocks_test_light_squeeze2.pth"
+double_dataset_test = False
+model_usage = "reuse"
+reuse_model = "minimaia_with_skip_1024.pth"
 
 
-# Calcute memory distribution so that 2/3 is dedicated to dataset pre tensor conversion, 1/2 saved for after
 
 if dataset_usage == "generate":
-
+    # Calcute memory distribution so that 2/3 is dedicated to dataset pre tensor conversion, 1/2 saved for after    
     total_mem = check_memory()
     print(total_mem, flush=True)
     pgn_memory_mark = total_mem - (2*allocated_memory)/3
@@ -47,7 +50,7 @@ if dataset_usage == "generate":
     num_classes = len(move_to_int)
 
 
-    with open(f"../../models/{dataset_name}_move_to_int", "wb") as file:
+    with open(f"../../models/{move_to_int_name}_move_to_int", "wb") as file:
         pickle.dump(move_to_int, file)
 
     X = torch.tensor(X, dtype=torch.float32)
@@ -72,7 +75,7 @@ elif dataset_usage == "reuse":
     print(len(X))
     print(len(y))
 
-    with open(f"../../models/{dataset_name}_move_to_int", "rb") as file:
+    with open(f"../../models/{move_to_int_name}_move_to_int", "rb") as file:
         move_to_int = pickle.load(file)
 
     num_classes = len(move_to_int)
@@ -112,7 +115,8 @@ elif model_usage == "reuse":
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
-    scheduler = MultiStepLR(optimizer, milestones=[30000], gamma=0.2)
+    # scheduler = MultiStepLR(optimizer, milestones=[30000], gamma=0.2)
+    scheduler = MultiStepLR(optimizer, milestones=[30000, 100000, 200000], gamma=0.4)
 
 
 # Get current time in a readable format

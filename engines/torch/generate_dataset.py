@@ -33,7 +33,7 @@ print(pgn_memory_mark, flush=True)
 
 
 np_X, np_y, games_parsed, files_parsed = load_dataset(data_folder=data_folder, pgn_memory_mark=pgn_memory_mark,
-                                                      selection="personal", name = username)
+                                                        selection="normal")
 
 
 np_X, np_y = np.array(np_X, dtype=np.float32), np.array(np_y)

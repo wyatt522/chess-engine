@@ -5,7 +5,7 @@ from auxiliary_func import load_pgn
 
 
 data_folder = "../../data/monthly_lichess_data"
-source_file = "november.pgn"
+source_file = "lichess_db_standard_rated_2020-03.pgn"
 out_file = "LowEloFiltered.pgn"
 
 with open(f"{data_folder}/{out_file}", "w", encoding="utf-8") as out_file:
