@@ -24,8 +24,10 @@ It failes after about 20 moves. Simple algorithm to detect blunders is needed.
 
 
 
+Install tablebase: https://chess.cygnitec.com/tablebases/gaviota/
+
 ## Installing UCI:
 
 - Quick Folder install:
 
-    ```pyinstaller --onedir --distpath ./dist --name torch_random_data --add-data "models/200EPOCHS_random_data.pth:models" --add-data "models/random_data_move_to_int:models" engines/torch/uci.py```
+    ```pyinstaller --onedir --distpath ./dist --name MiniMaiaBot --add-data "uci_config.yaml:." engines/torch/uci.py```

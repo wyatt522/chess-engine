@@ -2,5 +2,11 @@ chess==1.10.0
 numpy==1.26.4
 tqdm==4.66.4
 torch==2.3.1
-tensorboard
 psutil==7.1.0
+pyyaml
+tqdm
+# Optional, used for viewing collected data
+# tensorboard
+# tensorflow
+# Optional, used for compiling the uci script to an executable
+# pyinstaller
