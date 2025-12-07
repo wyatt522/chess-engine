@@ -21,7 +21,7 @@ with open("../../training_config.yaml") as file:
 run_name = config["username"]
 finetuning_dataset = f"../../data/{run_name}/{run_name}_dataset.pth"
 
-reuse_model = "../../models/minimaia_with_skip_1024.pth"
+reuse_model = "../../models/monthly_lichess_data_final_model.pth"
 move_to_int = config["moveEncoding"]
 original_dataset = "../../data/Lichess_Elite_Database/flipped_board_data_dataset.pth"
 

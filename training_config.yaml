@@ -1,5 +1,5 @@
-username: wyattff
+username: TheCoolBT
 moveEncoding: flipped_board_data
 memory: 230
 generateEncoding: False
-download: False
+download: True
