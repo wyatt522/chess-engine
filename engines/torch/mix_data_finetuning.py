@@ -76,12 +76,14 @@ model = MiniMaia(num_classes=num_classes, num_blocks=num_blocks, squeeze_layer=1
 model.load_state_dict(torch.load(reuse_model, weights_only=True, map_location=device))
 
 # Freeze everything except final fully connected layers
-# for name, child in model.named_children():
-#     for param in child.parameters():
-#         if name == 'fc1' or name == 'fc2':
-#             param.requires_grad = True
-#         else:
-#             param.requires_grad = False
+for name, child in model.named_children():
+    for param in child.parameters():
+        if name == 'fc1' or name == 'fc2':
+            print('not frozen')
+            param.requires_grad = True
+        else:
+            print('frozen')
+            param.requires_grad = False
 
 model.to(device)
 criterion = nn.CrossEntropyLoss()
@@ -93,7 +95,7 @@ scheduler = MultiStepLR(optimizer, milestones=[500000], gamma=0.2)
 current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 # Create a unique log directory
-log_dir = f"../../runs/{run_name}_i{len(yf)}_{current_time}"
+log_dir = f"../../runs/{run_name}_freeze_i{len(yf)}_{current_time}"
 
 # Create the SummaryWriter
 writer = SummaryWriter(log_dir=log_dir)
@@ -183,4 +185,4 @@ writer.close()
 
 
 # Save the model
-torch.save(model.state_dict(), f"../../models/{run_name}_no_freeze_model.pth")
+torch.save(model.state_dict(), f"../../models/{run_name}_freeze_model.pth")
