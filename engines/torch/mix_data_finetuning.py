@@ -62,7 +62,7 @@ val_size = len(dataset0) - train_size
 train_dataset0, val_dataset0 = random_split(dataset0, [train_size, val_size])
 
 # Then create DataLoaders/Iterators
-random_train0_sampler = RandomSampler(train_dataset0, replacement=True, num_samples=(num_steps))
+random_train0_sampler = RandomSampler(train_dataset0, replacement=True, num_samples=(num_steps*1024))
 train_loader0 = DataLoader(train_dataset0, batch_size=1024, sampler=random_train0_sampler)
 train_iterator0 = iter(train_loader0)
 val_loader0 = DataLoader(val_dataset0, batch_size=1024, shuffle=False)
