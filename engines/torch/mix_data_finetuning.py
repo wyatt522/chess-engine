@@ -21,11 +21,11 @@ with open("../../training_config.yaml") as file:
 run_name = config["username"]
 finetuning_dataset = f"../../data/{run_name}/{run_name}_dataset.pth"
 
-reuse_model = "../../models/monthly_lichess_data_final_model.pth"
+reuse_model = "../../models/minimaia_regular_final_model.pth"
 move_to_int = config["moveEncoding"]
 original_dataset = "../../data/Lichess_Elite_Database/flipped_board_data_dataset.pth"
 
-num_epochs = 10
+num_steps = 6000
 num_blocks = 6
 
 
@@ -62,7 +62,7 @@ val_size = len(dataset0) - train_size
 train_dataset0, val_dataset0 = random_split(dataset0, [train_size, val_size])
 
 # Then create DataLoaders/Iterators
-random_train0_sampler = RandomSampler(train_dataset0, replacement=True, num_samples=(num_epochs*(len(datasetf)//128)*1024))
+random_train0_sampler = RandomSampler(train_dataset0, replacement=True, num_samples=(num_steps))
 train_loader0 = DataLoader(train_dataset0, batch_size=1024, sampler=random_train0_sampler)
 train_iterator0 = iter(train_loader0)
 val_loader0 = DataLoader(val_dataset0, batch_size=1024, shuffle=False)
@@ -72,7 +72,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}', flush=True)
 
 
-model = MiniMaiaSkip(num_classes=num_classes, num_blocks=num_blocks, squeeze_layer=1024)
+model = MiniMaia(num_classes=num_classes, num_blocks=num_blocks, squeeze_layer=1024)
 model.load_state_dict(torch.load(reuse_model, weights_only=True, map_location=device))
 
 # Freeze everything except final fully connected layers
@@ -99,13 +99,15 @@ log_dir = f"../../runs/{run_name}_i{len(yf)}_{current_time}"
 writer = SummaryWriter(log_dir=log_dir)
 
 steps = 0
-for epoch in range(num_epochs):
+epoch = 0
+while steps < num_steps:
     start_time = time.time()
 
     # Training
     model.train()
     running_loss = 0.0
     for inputsf, labelsf in tqdm(train_loaderf):
+
 
 
         inputsf, labelsf = inputsf.to(device), labelsf.to(device)  # Move data to GPU
@@ -136,9 +138,6 @@ for epoch in range(num_epochs):
 
             steps += 1
 
-
-        
-
     # Validation
     model.eval()
     val_loss0 = 0.0
@@ -156,6 +155,8 @@ for epoch in range(num_epochs):
             loss = criterion(outputs, labels)
             val_lossf += loss.item()
 
+    epoch += 1
+
 
 
     # Stats
@@ -170,11 +171,11 @@ for epoch in range(num_epochs):
 
     
     current_lr = scheduler.get_last_lr()[0]
-    print(f'Steps: {steps}, Epoch: {epoch + 1}/{num_epochs}, Training Loss: {avg_train_loss:.4f}, Validation Loss Original: {avg_val_loss0:.4f}, Validation Loss Finetuning: {avg_val_lossf:.4f}, Time: {minutes}m{seconds}s, Learning Rate: {current_lr}', flush=True)
+    print(f'Steps: {steps}, Epoch: {epoch}, Training Loss: {avg_train_loss:.4f}, Validation Loss Original: {avg_val_loss0:.4f}, Validation Loss Finetuning: {avg_val_lossf:.4f}, Time: {minutes}m{seconds}s, Learning Rate: {current_lr}', flush=True)
 
-    writer.add_scalar("Loss/train", avg_train_loss, epoch + 1)
-    writer.add_scalar("Loss/validation", avg_val_lossf, epoch + 1)
-    writer.add_scalar("Loss/original_data_validation", avg_val_loss0, epoch + 1)
+    writer.add_scalar("Loss/train", avg_train_loss, steps)
+    writer.add_scalar("Loss/validation", avg_val_lossf, steps)
+    writer.add_scalar("Loss/original_data_validation", avg_val_loss0, steps)
 
 
 writer.close()
