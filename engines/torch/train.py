@@ -1,36 +1,43 @@
-import numpy as np # type: ignore
+import numpy as np
 import time
 import torch
-import torch.nn as nn # type: ignore
-import torch.optim as optim # type: ignore
-from torch.utils.data import random_split, DataLoader # type: ignore
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import random_split, DataLoader
 from torch.optim.lr_scheduler import MultiStepLR
-from chess import pgn # type: ignore
-from tqdm import tqdm # type: ignore
+from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from auxiliary_func import check_memory, load_dataset, encode_moves
 from dataset import ChessDataset
-from model import ChessModel
+from MiniMaia import MiniMaia, MiniMaiaSkipFC
 import pickle
+import yaml
 
 
 
+with open("../../training_config.yaml") as file:
+    config = yaml.safe_load(file)
 
-run_name = "lr_decay_experiment"
-data_folder = "../../data/Lichess_Elite_Database"
-allocated_memory = 1 # in GB Ram
-num_epochs = 60
-dataset = "generate"
+move_to_int_name = config["moveEncoding"]
+run_name = config["username"]
+dataset_name = "LowElo"
+data_folder = "../../data/monthly_lichess_data"
+allocated_memory = 60 # in GB Ram
+num_epochs = 30
+num_blocks = 6
+dataset_usage = "reuse"
+double_dataset_test = False
+model_usage = "reuse"
+reuse_model = "minimaia_with_skip_1024.pth"
 
 
-# Calcute memory distribution so that loading pgns is 10% of processed data, 1.5 gb leftover
 
-if dataset == "generate":
-
+if dataset_usage == "generate":
+    # Calcute memory distribution so that 2/3 is dedicated to dataset pre tensor conversion, 1/2 saved for after    
     total_mem = check_memory()
     print(total_mem, flush=True)
-    pgn_memory_mark = total_mem - allocated_memory/2
+    pgn_memory_mark = total_mem - (2*allocated_memory)/3
     print(pgn_memory_mark, flush=True)
 
 
@@ -43,13 +50,13 @@ if dataset == "generate":
     num_classes = len(move_to_int)
 
 
-    with open(f"../../models/{run_name}_move_to_int", "wb") as file:
+    with open(f"../../models/{move_to_int_name}_move_to_int", "wb") as file:
         pickle.dump(move_to_int, file)
 
     X = torch.tensor(X, dtype=torch.float32)
     y = torch.tensor(y, dtype=torch.long)
 
-    torch.save((X, y), f"{data_folder}/{run_name}_dataset.pth")
+    torch.save((X, y), f"{data_folder}/{dataset_name}_dataset.pth")
 
     print("Completed Data Processing", flush=True)
     print(f"GAMES PARSED: {games_parsed}", flush=True)
@@ -58,10 +65,17 @@ if dataset == "generate":
     available_gb = check_memory()
     print(f"Available Memory: {available_gb}", flush=True)
 
-elif dataset == "reuse":
-    X, y = torch.load(f"{data_folder}/{run_name}_dataset.pth")
+elif dataset_usage == "reuse":
+    X, y = torch.load(f"{data_folder}/{dataset_name}_dataset.pth")
+    if double_dataset_test:
+        X2, y2 = torch.load(f"{data_folder}/endgame_subdata2_dataset.pth")
+        X = torch.cat([X, X2], 0)
+        y = torch.cat([y, y2], 0)
 
-    with open(f"../../models/{run_name}_move_to_int", "rb") as file:
+    print(len(X))
+    print(len(y))
+
+    with open(f"../../models/{move_to_int_name}_move_to_int", "rb") as file:
         move_to_int = pickle.load(file)
 
     num_classes = len(move_to_int)
@@ -69,11 +83,8 @@ elif dataset == "reuse":
     print("Sucessfully loaded data")
 
 
-
-
 # Create Dataset
 dataset = ChessDataset(X, y)
-dataloader = DataLoader(dataset, batch_size=1024, shuffle=True)
 
 # Compute split sizes
 train_size = int(0.9 * len(dataset))
@@ -90,23 +101,32 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}', flush=True)
 
 # Model Initialization
-model = ChessModel(num_classes=num_classes).to(device)
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.1)
+if model_usage == "generate":
+    model = MiniMaia(num_classes=num_classes, num_blocks=num_blocks).to(device)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
-scheduler = MultiStepLR(optimizer, milestones=[60000, 150000, 300000], gamma=0.1)
+    scheduler = MultiStepLR(optimizer, milestones=[50000, 250000, 400000], gamma=0.2)
+
+elif model_usage == "reuse":
+    model = MiniMaia(num_classes=num_classes, num_blocks=num_blocks)
+    model.load_state_dict(torch.load(f"../../models/{reuse_model}", weights_only=True, map_location=device))
+    model.to(device)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
+
+    # scheduler = MultiStepLR(optimizer, milestones=[30000], gamma=0.2)
+    scheduler = MultiStepLR(optimizer, milestones=[30000, 100000, 200000], gamma=0.4)
 
 
 # Get current time in a readable format
 current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 # Create a unique log directory
-log_dir = f"../../runs/{run_name}_experiment_i{len(y)}_{current_time}"
+log_dir = f"../../runs/{run_name}_i{len(y)}_{current_time}"
 
 # Create the SummaryWriter
 writer = SummaryWriter(log_dir=log_dir)
-
-
 
 
 steps = 0
@@ -155,12 +175,12 @@ for epoch in range(num_epochs):
     minutes: int = int(epoch_time // 60)
     seconds: int = int(epoch_time) - minutes * 60
 
-    if epoch % 25 == 0:
+    if epoch % 20 == 0:
         # Save the model
         torch.save(model.state_dict(), f"../../models/checkpoints/TORCH_{epoch}EPOCHS_{run_name}.pth")
     
     current_lr = scheduler.get_last_lr()[0]
-    print(f'Steps: {steps}, Epoch: {epoch + 1}/{num_epochs}, Loss: {running_loss / len(train_loader):.4f}, Time: {minutes}m{seconds}s, Learning Rate: {current_lr}', flush=True)
+    print(f'Steps: {steps}, Epoch: {epoch + 1}/{num_epochs}, Training Loss: {running_loss / len(train_loader):.4f}, Validation Loss: {val_loss / len(val_loader):.4f} Time: {minutes}m{seconds}s, Learning Rate: {current_lr}', flush=True)
 
     writer.add_scalar("Loss/train", avg_train_loss, epoch + 1)
     writer.add_scalar("Loss/validation", avg_val_loss, epoch + 1)
