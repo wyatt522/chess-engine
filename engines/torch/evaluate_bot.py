@@ -9,8 +9,8 @@ async def main() -> None:
     _, engine = await chess.engine.popen_uci("../../dist/MiniMaiaBot/MiniMaiaBot")
     _, stockfish = await chess.engine.popen_uci("/usr/local/bin/stockfish")
     
-    await engine.configure({"ModelWeights": "wyattff", "EarlyGameTemp": 10000, "StartGameTemp": 10000})
-    await stockfish.configure({"UCI_LimitStrength": True, "Skill Level": 20, "UCI_Elo": 1400})
+    await engine.configure({"ModelWeights": "default"})
+    await stockfish.configure({"UCI_LimitStrength": True, "Skill Level": 20, "UCI_Elo": 1320})
 
     minimaia_w = 0
     minimaia_l = 0

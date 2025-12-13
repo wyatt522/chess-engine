@@ -1,12 +1,6 @@
 # chess-engine
 
-[TRY IT ONLINE](https://setday.github.io/chess-engine-online/)
-
-A big thanks to [Alexander Serkov](https://github.com/setday) for the web implementation.
-
-models/TORCH_100EPOCHS has shown a performance of approx. 1500 ELO during opening and middlegame.
-
-It failes after about 20 moves. Simple algorithm to detect blunders is needed.
+Chess engine based on the Maia-1 model with finetuning capabilities. To finetune a model, edit the `training_config.yaml` file to the desired chess.com username, and run `mix_data_finetuning`. `generate_dataset.py` can create a dataset given the Chess.com username in the configuration.
 
 ## Setup:
 
@@ -16,11 +10,9 @@ It failes after about 20 moves. Simple algorithm to detect blunders is needed.
 
 - Put your data (.pgn files) into ```data/pgn/```. 
 
+
+
 > The [dataset](https://database.nikonoel.fr/) that I used.
-
-- Refer to ```engines/chess_engine.ipynb``` for further instructions and actions (TensorFlow)
-
-- Or see ```engines/torch/predict```
 
 
 
